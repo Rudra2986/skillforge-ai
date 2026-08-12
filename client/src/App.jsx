@@ -3,6 +3,9 @@ import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import ResumeUploader from './components/ResumeUploader';
 import ProfileReviewModal from './components/ProfileReviewModal';
+import ReadinessScoreCard from './components/ReadinessScoreCard';
+import InterviewQuestionHub from './components/InterviewQuestionHub';
+import CertificationRecommendations from './components/CertificationRecommendations';
 import { useAuth } from './context/AuthContext';
 import { useCareer } from './context/CareerContext';
 import { 
@@ -12,24 +15,26 @@ import {
   TrendingUp, 
   CheckCircle, 
   Clock, 
-  ChevronRight,
-  Sparkles,
-  ArrowRight,
-  ShieldCheck,
-  Zap,
-  Compass,
-  ArrowUpRight,
-  GraduationCap,
-  Briefcase,
-  Code2,
-  Check,
-  Cpu,
-  Terminal,
-  Activity,
-  Award,
-  BookOpen,
-  UploadCloud,
-  CheckCircle2
+  ChevronRight, 
+  Sparkles, 
+  ArrowRight, 
+  ShieldCheck, 
+  Zap, 
+  Compass, 
+  ArrowUpRight, 
+  GraduationCap, 
+  Briefcase, 
+  Code2, 
+  Check, 
+  Cpu, 
+  Terminal, 
+  Activity, 
+  Award, 
+  BookOpen, 
+  UploadCloud, 
+  CheckCircle2,
+  Plus,
+  X
 } from 'lucide-react';
 
 export default function App() {
@@ -39,9 +44,26 @@ export default function App() {
   const [heroPersona, setHeroPersona] = useState('fullstack'); // 'fullstack' | 'datascience'
   const [activeDashboardTab, setActiveDashboardTab] = useState('roadmap'); // 'roadmap' | 'scanner'
   const [scanNotification, setScanNotification] = useState(null);
+  const [inlineSkillInput, setInlineSkillInput] = useState('');
   
   const { user, isGuest, activePersonaKey, loginAsDemo } = useAuth();
-  const { careerData, hasGeneratedRoadmap, updateVerifiedProfile, toggleMilestone } = useCareer();
+  const { 
+    careerData, 
+    hasGeneratedRoadmap, 
+    updateVerifiedProfile, 
+    toggleMilestone,
+    addSkill,
+    removeSkill,
+    addOrToggleProject
+  } = useCareer();
+
+  const handleInlineAddSkill = (e) => {
+    e.preventDefault();
+    if (inlineSkillInput.trim()) {
+      addSkill(inlineSkillInput.trim());
+      setInlineSkillInput('');
+    }
+  };
 
   // Called when Resume scan finishes in Step 3
   const handleScanComplete = (extractedData) => {
@@ -388,14 +410,14 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Action Area: Readiness Badge & Scan CTA */}
+              {/* Action Area: CTA Button & Premium Mini Readiness Gauge */}
               <div className="flex items-center space-x-3 self-stretch sm:self-auto justify-between sm:justify-end">
                 {hasGeneratedRoadmap ? (
                   <>
                     <button
                       type="button"
                       onClick={() => setActiveDashboardTab(activeDashboardTab === 'scanner' ? 'roadmap' : 'scanner')}
-                      className={`px-4 py-2.5 rounded-lg text-xs font-semibold interactive-transition border flex items-center space-x-2 ${
+                      className={`px-4 py-2.5 rounded-lg text-xs font-semibold interactive-transition border flex items-center space-x-2 cursor-pointer ${
                         activeDashboardTab === 'scanner'
                           ? 'bg-accent text-white border-accent shadow-sm'
                           : 'bg-canvas-surface hover:bg-canvas-elevated text-neutral-200 border-border hover:border-accent/40'
@@ -405,13 +427,41 @@ export default function App() {
                       <span>{activeDashboardTab === 'scanner' ? 'View Roadmap' : 'Scan New Resume'}</span>
                     </button>
 
-                    <div className="flex items-center space-x-4 bg-canvas-surface border border-border p-3 rounded-lg shadow-inner">
-                      <div className="text-right">
-                        <div className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider">Readiness</div>
-                        <div className="text-xl font-bold text-neutral-100">{careerData?.readiness_score || 64}%</div>
+                    {/* Premium Mini Readiness Gauge */}
+                    <div className="flex items-center space-x-3.5 px-3.5 py-2 rounded-xl bg-canvas-surface border border-border shadow-sm">
+                      <div className="flex flex-col text-right">
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-semibold flex items-center justify-end gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+                          Readiness
+                        </span>
+                        <div className="text-lg font-bold font-mono text-neutral-100 leading-tight">
+                          {careerData?.readiness_score || 64}%
+                        </div>
                       </div>
-                      <div className="w-10 h-10 rounded-full border-2 border-accent flex items-center justify-center text-xs font-bold text-accent-text bg-accent-subtle/30 shadow-sm">
-                        {careerData?.readiness_score || 64}%
+
+                      {/* Mini Progress Ring with Center Icon */}
+                      <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
+                        <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+                          <path
+                            className="text-canvas-elevated"
+                            strokeWidth="3.2"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                          <path
+                            className="text-accent transition-all duration-500 ease-out"
+                            strokeDasharray={`${careerData?.readiness_score || 64}, 100`}
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            stroke="currentColor"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <TrendingUp className="w-3.5 h-3.5 text-accent-text" />
+                        </div>
                       </div>
                     </div>
                   </>
@@ -462,9 +512,18 @@ export default function App() {
               /* TAB CONTENT B: TWO-COLUMN SKILL & ROADMAP GRID */
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
-                {/* Left Column: Skills Delta Matrix */}
+                {/* Left Column: Readiness Engine & Skills Delta Matrix */}
                 <div className="lg:col-span-1 space-y-6">
                   
+                  {/* Placement Readiness Engine Card */}
+                  <ReadinessScoreCard
+                    score={careerData?.readiness_score || 55}
+                    roadmap={careerData?.roadmap || []}
+                    skills={careerData?.current_skills || []}
+                    projects={careerData?.projects || []}
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                  />
+
                   {/* Current Verified Skills */}
                   <div className="bg-canvas-subtle border border-border rounded-xl p-5 space-y-4 shadow-sm">
                     <div className="flex items-center justify-between">
@@ -473,19 +532,47 @@ export default function App() {
                         <span>Verified Competencies</span>
                       </h2>
                       <span className="text-xs font-mono text-neutral-400">
-                        {careerData?.current_skills?.length || 0} Skills
+                        {careerData?.current_skills?.length || 0} / 8 Target
                       </span>
                     </div>
+
                     <div className="flex flex-wrap gap-1.5">
                       {careerData?.current_skills?.map((skill, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-1 text-xs font-medium bg-canvas-surface border border-border rounded text-neutral-300 hover:border-accent/40 interactive-transition"
+                          className="group inline-flex items-center space-x-1.5 px-2.5 py-1 text-xs font-medium bg-canvas-surface border border-border rounded-lg text-neutral-300 hover:border-emerald-500/50 interactive-transition"
                         >
-                          {skill}
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span>{skill}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeSkill(skill)}
+                            className="p-0.5 text-neutral-500 hover:text-rose-400 rounded-full interactive-transition"
+                            title={`Remove ${skill}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
                         </span>
                       ))}
                     </div>
+
+                    {/* Inline Add Skill Form */}
+                    <form onSubmit={handleInlineAddSkill} className="flex items-center space-x-2 pt-2 border-t border-border-subtle">
+                      <input
+                        type="text"
+                        value={inlineSkillInput}
+                        onChange={(e) => setInlineSkillInput(e.target.value)}
+                        placeholder="Type skill & press Enter (e.g. Docker, MLOps)..."
+                        className="flex-1 px-3 py-1.5 bg-canvas-surface border border-border focus:border-accent rounded-lg text-xs text-neutral-100 outline-none interactive-transition"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-canvas-elevated hover:bg-canvas-surface border border-border hover:border-accent text-xs font-semibold text-neutral-200 rounded-lg interactive-transition flex items-center space-x-1"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-accent-text" />
+                        <span>Add</span>
+                      </button>
+                    </form>
                   </div>
 
                   {/* Identified Skill Gaps (High-Signal) */}
@@ -594,6 +681,97 @@ export default function App() {
                     </div>
 
                   </div>
+
+                  {/* Recommended Capstone Projects (Placement Proof) */}
+                  <div className="bg-canvas-subtle border border-border rounded-xl p-6 space-y-4 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+                      <div>
+                        <h2 className="text-sm font-semibold text-neutral-100 flex items-center space-x-2">
+                          <Briefcase className="w-4 h-4 text-amber-400" />
+                          <span>Recommended Capstone Projects (Placement Proof)</span>
+                        </h2>
+                        <p className="text-xs text-neutral-400 mt-0.5">
+                          Build and verify production projects to maximize your Portfolio Proof pillar.
+                        </p>
+                      </div>
+                      <span className="text-xs font-mono text-neutral-400">
+                        {careerData?.projects?.length || 0} / 3 Verified
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      {careerData?.recommended_projects?.map((proj) => {
+                        const isVerified = careerData?.projects?.some(
+                          (p) => p.title?.toLowerCase() === proj.title?.toLowerCase()
+                        );
+                        return (
+                          <div
+                            key={proj.id}
+                            className={`p-4 rounded-xl border interactive-transition flex flex-col justify-between space-y-3 ${
+                              isVerified
+                                ? 'bg-emerald-950/20 border-emerald-800/60 shadow-xs'
+                                : 'bg-canvas-surface border-border hover:border-border-strong'
+                            }`}
+                          >
+                            <div className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-neutral-100">{proj.title}</span>
+                                <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-canvas border border-border-subtle text-neutral-400">
+                                  {proj.difficulty}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-neutral-400 leading-relaxed">
+                                {proj.architecture_overview || 'Production pipeline designed for real-world placement benchmarks.'}
+                              </p>
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {proj.skills_gained?.map((sk, sIdx) => (
+                                  <span
+                                    key={sIdx}
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-canvas border border-border text-neutral-300"
+                                  >
+                                    {sk}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => addOrToggleProject(proj)}
+                              className={`w-full py-2 px-3 rounded-lg text-xs font-semibold interactive-transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                                isVerified
+                                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                                  : 'bg-canvas hover:bg-canvas-elevated text-neutral-200 border border-border hover:border-accent'
+                              }`}
+                            >
+                              {isVerified ? (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  <span>Verified &amp; Linked to Profile</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                                  <span>Mark Built &amp; Verify Project</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Recommended Industry Certifications */}
+                  <CertificationRecommendations 
+                    certifications={careerData?.recommended_certifications || []} 
+                  />
+
+                  {/* Targeted Placement Interview Prep Hub */}
+                  <InterviewQuestionHub 
+                    questions={careerData?.mock_interview_questions || []}
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                  />
 
                 </div>
 

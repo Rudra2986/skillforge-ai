@@ -134,6 +134,24 @@ export const DEMO_PERSONAS = {
           "HNSW trades slight accuracy for significantly faster sub-second vector queries"
         ]
       }
+    ],
+    recommended_certifications: [
+      {
+        id: "c1",
+        title: "AWS Certified Cloud Practitioner",
+        issuer: "Amazon Web Services",
+        level: "Foundational",
+        impact: "High Placement ROI",
+        focus: "Cloud Architecture, S3 Storage, IAM Security"
+      },
+      {
+        id: "c2",
+        title: "Generative AI with Large Language Models",
+        issuer: "DeepLearning.AI / AWS",
+        level: "Advanced",
+        impact: "Direct AI Benchmark Match",
+        focus: "Fine-tuning, RAG Architectures, Vector Quantization"
+      }
     ]
   },
 
@@ -225,6 +243,24 @@ export const DEMO_PERSONAS = {
           "Track model performance metrics against delayed ground truth labels",
           "Trigger automated retraining jobs when drift thresholds exceed tolerance"
         ]
+      }
+    ],
+    recommended_certifications: [
+      {
+        id: "dc1",
+        title: "TensorFlow Developer Certificate",
+        issuer: "Google / TensorFlow",
+        level: "Intermediate",
+        impact: "Core Skill Proof",
+        focus: "Computer Vision, NLP, Time Series, Transfer Learning"
+      },
+      {
+        id: "dc2",
+        title: "Machine Learning in Production (MLOps)",
+        issuer: "DeepLearning.AI",
+        level: "Advanced",
+        impact: "High Placement ROI",
+        focus: "Model Serving, Continuous Monitoring, Pipeline Automation"
       }
     ]
   }

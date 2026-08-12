@@ -150,28 +150,30 @@ This document is the **step-by-step technical implementation guide** for **Perso
 - [x] `POST /api/resume/parse` integration via `services/api.js`.
 - [x] Offline fallback support for zero-error hackathon demo resilience.
 - [x] 1-Click Quick Sample Resume shortcuts for Alex Rivera & Priya Sharma.
-- [ ] Mount ResumeUploader into `App.jsx` and connect `onScanComplete` callback to launch Step 4 (`ProfileReviewModal`).
+- [x] Mount ResumeUploader into `App.jsx` and connect `onScanComplete` callback to launch Step 4 (`ProfileReviewModal`).
 
 ---
 
 ### 🔹 Part 4: "Human-in-the-Loop" Profile Review Modal & Readiness Score Gauge
 * **Goal**: Give the student full control to review/edit their extracted profile and calculate an animated Placement Readiness Score synced with Person 2's `/api/progress/update` math algorithm.
-* **Files to Create / Configure**:
-  - `client/src/components/ProfileReviewModal.jsx` [NEW]:
+* **Files Created & Configured**:
+  - `client/src/components/ProfileReviewModal.jsx` [COMPLETED]:
     - Editable Name & Education fields.
     - Interactive Skill Chips: clickable `[ React ✕ ]` to delete, input box to add new skills.
-    - Career Aspirations selector: Target Role (*Full-Stack, AI/ML, DevOps*), Target Company Tier, Timeline (3/6 mos).
-    - `[ 🚀 Generate My AI Career Roadmap ]` action button saving to `POST /api/progress/save-roadmap`.
-  - `client/src/components/ReadinessScoreCard.jsx` [NEW]:
-    - SVG / Recharts animated radial progress donut (0–100%).
-    - Dynamic tier labels: *"Foundation Stage" (45%) ➔ "Interview Ready" (85%)*.
-    - Breakdown metrics for Core Skills, Projects, and Interview Prep.
+    - Career Aspirations selector: Target Role (*Full-Stack, AI/ML, DevOps*), Target Company Tier, Timeline (8/12/16 wks).
+    - `[ 🚀 Generate My AI Career Roadmap ]` action button activating roadmap.
+  - `client/src/components/ReadinessScoreCard.jsx` [COMPLETED]:
+    - SVG animated radial progress donut gauge (0–100%).
+    - Dynamic tier labels: *"Foundation Stage" (< 55%) ➔ "Core Competency" (55-79%) ➔ "Interview Ready" (80-100%)*.
+    - Breakdown progress bars for Technical Skills, Milestone Execution, and Portfolio Proof.
     - Synced with `POST /api/progress/update` on milestone toggles.
 * **Deliverable Checklist**:
-  - [ ] Profile review modal opens automatically after resume scan.
-  - [ ] Skills can be added and removed with interactive tag animations.
-  - [ ] Target role selection updates career context.
-  - [ ] Readiness Score gauge animates smoothly and synchronizes with server math formula.
+  - [x] Profile review modal opens automatically after resume scan.
+  - [x] Skills can be added and removed with interactive tag animations.
+  - [x] Target role selection updates career context.
+  - [x] Readiness Score gauge animates smoothly and synchronizes with server math formula.
+  - [x] Pre-ingestion locking guarantees roadmap and score are hidden until generated.
+  - [x] Persona isolation guarantees zero cross-contamination between Alex and Priya.
 
 ---
 
@@ -187,8 +189,8 @@ This document is the **step-by-step technical implementation guide** for **Perso
 
 ---
 
-## 🚦 Execution Order
-1. **Execute Part 1** ➔ (Done) Design tokens, app shell, Navbar & Context stores.
-2. **Execute Part 2** ➔ (Now) FastAPI Auth client, AuthModal, 1-Click Judge Demo & Token lifecycle.
-3. **Execute Part 3** ➔ Resume Dropzone, PDF upload to `/api/resume/parse`, & animated AI scanner.
-4. **Execute Part 4** ➔ Profile Review Modal, skill tag editor, & Readiness Score Donut Gauge.
+## 🏁 Final Frontend Execution Status: 100% COMPLETE
+1. **Part 1** ➔ (Done) Design tokens, app shell, Navbar & Context stores.
+2. **Part 2** ➔ (Done) FastAPI Auth client, AuthModal, 1-Click Judge Demo & Token lifecycle.
+3. **Part 3** ➔ (Done) Resume Dropzone, PDF upload to `/api/resume/parse`, & animated AI scanner.
+4. **Part 4** ➔ (Done) Profile Review Modal, skill tag editor, Readiness Score Donut Gauge & milestone math sync.
