@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { DEMO_PERSONAS } from '../services/mockData';
 import { useAuth } from './AuthContext';
+import { resumeAPI, aiAPI, progressAPI } from '../services/api';
 
 const CareerContext = createContext(null);
 
@@ -45,6 +46,29 @@ export function CareerProvider({ children }) {
     localStorage.setItem(`skillforge_career_${key}`, JSON.stringify(newData));
   };
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState(null);
+
+  // Full AI pipeline: upload PDF -> P2 parse -> P3 normalize -> P3 gap analysis -> P2 save
+  const uploadAndAnalyze = async (pdfFile, targetRole, timelineWeeks = 12) => {
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    try {
+      const parsed = await resumeAPI.parsePDF(pdfFile);
+      const rawText = parsed.raw_text || JSON.stringify(parsed);
+      const profile = await aiAPI.normalizeResume(rawText);
+      const intelligencePackage = await aiAPI.analyzeGap(profile, targetRole, timelineWeeks);
+      await progressAPI.saveRoadmap(intelligencePackage).catch(() => null);
+      saveCareerData(intelligencePackage);
+      return { success: true, data: intelligencePackage };
+    } catch (err) {
+      setAnalysisError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   // Toggle milestone completion & recalculate readiness score dynamically
   const toggleMilestone = (milestoneId) => {
     if (!careerData?.roadmap) return;
@@ -70,6 +94,9 @@ export function CareerProvider({ children }) {
     };
 
     saveCareerData(updatedData);
+    // Sync with backend for authenticated users (non-blocking)
+    progressAPI.updateMilestone(milestoneId, !careerData.roadmap.find(m => m.id === milestoneId)?.completed)
+      .catch(() => null);
   };
 
   // Human-in-the-Loop Profile Update (Called after Step 2 verification)
@@ -87,7 +114,10 @@ export function CareerProvider({ children }) {
       careerData,
       saveCareerData,
       toggleMilestone,
-      updateVerifiedProfile
+      updateVerifiedProfile,
+      uploadAndAnalyze,
+      isAnalyzing,
+      analysisError
     }}>
       {children}
     </CareerContext.Provider>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
 import { useAuth } from './context/AuthContext';
@@ -32,7 +32,29 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [heroPersona, setHeroPersona] = useState('fullstack'); // 'fullstack' | 'datascience'
   const { user, isGuest, activePersonaKey, loginAsDemo } = useAuth();
-  const { careerData, toggleMilestone } = useCareer();
+  const { careerData, toggleMilestone, uploadAndAnalyze, isAnalyzing, analysisError } = useCareer();
+  const [targetRole, setTargetRole] = useState('Full-Stack Developer');
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setSelectedFile(file);
+      setUploadSuccess(false);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!selectedFile) return;
+    const result = await uploadAndAnalyze(selectedFile, targetRole);
+    if (result.success) {
+      setUploadSuccess(true);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-canvas text-neutral-200 flex flex-col">
@@ -288,7 +310,77 @@ export default function App() {
           /* CASE B: USER IS SIGNED IN / EXPLORING -> RENDER ACTIVE DASHBOARD          */
           /* ========================================================================= */
           <div className="space-y-8 animate-in fade-in duration-200">
-            
+
+            {/* Resume Upload & AI Analysis Panel */}
+            <section className="bg-canvas-subtle border border-border rounded-lg p-5 space-y-4">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-accent-text" />
+                <h2 className="text-sm font-semibold text-neutral-100">Analyze Your Resume</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent-text font-mono">AI Powered</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* File picker */}
+                <div
+                  className="sm:col-span-1 flex items-center justify-center border-2 border-dashed border-border hover:border-accent/40 rounded-lg p-4 cursor-pointer interactive-transition"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <div className="text-center space-y-1">
+                    <FileText className="w-6 h-6 text-neutral-400 mx-auto" />
+                    <p className="text-xs text-neutral-400">
+                      {selectedFile ? (
+                        <span className="text-accent-text font-medium">{selectedFile.name}</span>
+                      ) : 'Click to upload PDF resume'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Target role input */}
+                <div className="sm:col-span-1 space-y-1.5">
+                  <label className="text-[11px] text-neutral-400 font-mono uppercase">Target Role</label>
+                  <input
+                    type="text"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
+                    placeholder="e.g. Full-Stack Developer"
+                    className="w-full px-3 py-2 text-sm bg-canvas-surface border border-border rounded-lg text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-accent/50"
+                  />
+                </div>
+
+                {/* Analyze button + status */}
+                <div className="sm:col-span-1 flex flex-col justify-end space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleAnalyze}
+                    disabled={!selectedFile || isAnalyzing}
+                    className="w-full px-4 py-2 bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold rounded-lg interactive-transition flex items-center justify-center space-x-2"
+                  >
+                    {isAnalyzing ? (
+                      <><Activity className="w-4 h-4 animate-pulse" /><span>Analyzing...</span></>
+                    ) : (
+                      <><Sparkles className="w-4 h-4" /><span>Analyze Resume</span></>
+                    )}
+                  </button>
+                  {uploadSuccess && (
+                    <p className="text-xs text-emerald-400 flex items-center space-x-1">
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>Dashboard updated with AI results!</span>
+                    </p>
+                  )}
+                  {analysisError && (
+                    <p className="text-xs text-rose-400 truncate" title={analysisError}>{analysisError}</p>
+                  )}
+                </div>
+              </div>
+            </section>
+
             {/* Top Hero Summary Bar */}
             <section className="bg-canvas-subtle border border-border rounded-lg p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
               <div className="space-y-1">
