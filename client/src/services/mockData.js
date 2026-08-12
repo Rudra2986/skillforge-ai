@@ -42,7 +42,7 @@ export const DEMO_PERSONAS = {
         phase: 1,
         title: "Production Backend & Relational Data",
         duration: "Weeks 1 - 3",
-        completed: true,
+        completed: false,
         action_items: [
           "Build production-ready CRUD services in FastAPI with Pydantic v2 validation",
           "Design normalized relational schemas in PostgreSQL with SQLModel",
@@ -173,7 +173,7 @@ export const DEMO_PERSONAS = {
         phase: 1,
         title: "Model Serving & Serialization",
         duration: "Weeks 1 - 4",
-        completed: true,
+        completed: false,
         action_items: [
           "Package trained Scikit-Learn models using ONNX and Joblib",
           "Build low-latency inference endpoints in FastAPI",

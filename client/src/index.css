@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    background-color: #0D0F12;
-    color: #E2E8F0;
+  html, body, #root {
+    background-color: #0D0F12 !important;
+    color: #E2E8F0 !important;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     line-height: 1.55;
     letter-spacing: -0.011em;
@@ -58,4 +58,13 @@ input:focus, select:focus, textarea:focus {
 /* Snappy 150ms Transitions */
 .interactive-transition {
   transition: all 0.15s ease-in-out;
+}
+
+/* Remove default focus outlines on clicked buttons */
+button:focus {
+  outline: none;
+}
+
+button:focus-visible {
+  outline: none;
 }

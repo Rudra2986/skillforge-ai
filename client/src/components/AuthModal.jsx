@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import SkillForgeLogo from './SkillForgeLogo';
 import { 
   Compass, 
   X, 
@@ -60,7 +61,7 @@ export default function AuthModal({ isOpen, onClose }) {
   // Clear errors when modal toggles or tab changes
   useEffect(() => {
     if (isOpen) {
-      clearAuthError();
+      if (typeof clearAuthError === 'function') clearAuthError();
       setSuccessMessage(null);
     }
   }, [isOpen, activeTab]);
@@ -68,7 +69,7 @@ export default function AuthModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const handleClose = () => {
-    clearAuthError();
+    if (typeof clearAuthError === 'function') clearAuthError();
     setSuccessMessage(null);
     onClose();
   };
@@ -125,10 +126,8 @@ export default function AuthModal({ isOpen, onClose }) {
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-border-subtle flex items-start justify-between">
           <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 rounded bg-canvas-surface border border-border flex items-center justify-center text-accent-text">
-                <Compass className="w-4 h-4" />
-              </div>
+            <div className="flex items-center space-x-2.5">
+              <SkillForgeLogo className="w-7 h-7" withGlow={false} />
               <span className="text-base font-semibold text-neutral-100 tracking-tight">
                 SkillForge AI
               </span>

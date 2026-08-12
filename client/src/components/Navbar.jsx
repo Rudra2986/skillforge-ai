@@ -1,11 +1,12 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCareer } from '../context/CareerContext';
+import SkillForgeLogo from './SkillForgeLogo';
 import { Compass, User, LogIn, LogOut, Sparkles, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 
 export default function Navbar({ onOpenAuthModal }) {
   const { user, isGuest, activePersonaKey, loginAsDemo, logout, isBackendLive } = useAuth();
-  const { careerData } = useCareer();
+  const { careerData, hasGeneratedRoadmap } = useCareer();
 
   return (
     <header className="sticky top-0 z-40 w-full bg-canvas-subtle/90 backdrop-blur-md border-b border-border-subtle">
@@ -13,18 +14,24 @@ export default function Navbar({ onOpenAuthModal }) {
         
         {/* Left: Brand Identity & Active Goal */}
         <div className="flex items-center space-x-4 sm:space-x-6">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded bg-canvas-surface border border-border flex items-center justify-center text-accent-text shadow-sm">
-              <Compass className="w-4 h-4" />
-            </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center space-x-3 text-left group hover:opacity-95 interactive-transition cursor-pointer border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none select-none bg-transparent p-0 shadow-none"
+            title="Return to Landing Page"
+          >
+            <SkillForgeLogo className="w-8 h-8 group-hover:scale-105 interactive-transition" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-neutral-100 tracking-tight">SkillForge AI</span>
-              <span className="text-[11px] font-mono text-neutral-400">Career & Learning Navigator</span>
+              <span className="text-sm font-semibold text-neutral-100 tracking-tight flex items-center gap-1.5 group-hover:text-white">
+                SkillForge AI
+                <span className="text-[9px] font-mono font-medium px-1.5 py-0.2 rounded bg-accent/15 text-accent-text border border-accent/25">v1.0</span>
+              </span>
+              <span className="text-[11px] font-mono text-neutral-400 group-hover:text-neutral-300">Career &amp; Learning Navigator</span>
             </div>
-          </div>
+          </button>
 
-          {/* Active Target Role Badge (Only shown when signed in) */}
-          {user && careerData?.target_role && (
+          {/* Active Target Role Badge (Only shown when signed in & roadmap is generated) */}
+          {user && hasGeneratedRoadmap && careerData?.target_role && (
             <div className="hidden lg:flex items-center space-x-2 px-2.5 py-1 rounded bg-canvas-surface border border-border text-xs">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span className="text-neutral-400">Target Role:</span>

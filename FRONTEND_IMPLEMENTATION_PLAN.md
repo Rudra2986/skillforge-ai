@@ -80,17 +80,77 @@ This document is the **step-by-step technical implementation guide** for **Perso
 
 ---
 
-### 🔹 Part 3: Resume Dropzone & Multi-Step AI Extraction (⏭️ Next Step)
-* **Goal**: Build an interactive PDF upload dropzone connecting to Person 2's `POST /api/resume/parse` with realistic multi-step AI scan animations and sample resume shortcuts.
-* **Files to Create / Configure**:
-  - `client/src/components/ResumeUploader.jsx` [NEW] — Drag-and-drop file upload area supporting `.pdf` files, sending `multipart/form-data` to `/api/resume/parse`.
-  - Multi-step scanning animation ticker (*"Step 1/3: Reading PDF structure..." ➔ "Step 2/3: Extracting technical competencies..." ➔ "Step 3/3: Parsing portfolio projects..."*).
-  - **"⚡ Quick Load Sample Resume"** shortcuts (*Full-Stack Resume*, *AI/ML Resume*) for 1-click testing.
-* **Deliverable Checklist**:
-  - [ ] File drop and file picker working with drag-over visual effects.
-  - [ ] PDF sent to `POST /api/resume/parse` (with fallback to mock profile if server is offline).
-  - [ ] Animated scan sequence with smooth progress bar.
-  - [ ] Quick Load buttons trigger scan animation and populate career state.
+### 🔹 Part 3: Resume Dropzone & Multi-Step AI Extraction Engine (🎯 NEXT STEP)
+* **Goal**: Build an interactive, drag-and-drop PDF upload dropzone connecting to Person 2's FastAPI `POST /api/resume/parse` endpoint, complete with realistic multi-stage AI scan animations, offline resilience, and 1-click sample resume shortcuts for hackathon judges.
+
+#### 🏗️ Architecture & Component Data Flow
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  [ResumeUploader.jsx]                                                  │
+│  ├─ 1. Drag & Drop PDF Zone (< 10MB, .pdf validation)                  │
+│  ├─ 2. Multi-Stage AI Scanning Ticker (0% ➔ 100%)                      │
+│  ├─ 3. REST API: POST http://localhost:8000/api/resume/parse           │
+│  │     (multipart/form-data with automatic fallback if offline)        │
+│  └─ 4. ⚡ "Quick Sample Resume" 1-Click Evaluator Buttons (Alex/Priya)   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ onScanComplete(extractedData)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│  [CareerContext.jsx & App.jsx]                                         │
+│  • Stores `candidate_name`, `education`, `current_skills`, `projects`  │
+│  • Transitions workflow to Step 4: [ProfileReviewModal.jsx]           │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 📁 Files to Create / Configure
+1. `client/src/components/ResumeUploader.jsx` [NEW / POLISH]:
+   - **Dark Glassmorphic Dropzone**: Border-dashed drop area with drag-over glow effects, supporting file drop and native file picker.
+   - **File Validation**: Strict `.pdf` check with clear error badges for unsupported file formats or files > 10MB.
+   - **Multi-Stage AI Scan Animation Ticker**:
+     - *Stage 1 (0% – 45%)*: `"Stage 1/3: Reading PDF layout structure & text blocks..."`
+     - *Stage 2 (45% – 85%)*: `"Stage 2/3: Extracting verified technical competencies & tools..."`
+     - *Stage 3 (85% – 100%)*: `"Stage 3/3: Normalizing portfolio projects & certifications..."`
+   - **Extracted Summary Card**: Post-scan preview showing extracted candidate name, education, and interactive skill tags with verification badges.
+   - **⚡ 1-Click Sample Resumes**: Instant test shortcuts for **Alex Rivera (Full-Stack PDF)** and **Priya Sharma (AI/ML PDF)** for seamless zero-latency demo evaluation.
+2. `client/src/services/api.js` [VERIFY / CONFIGURE]:
+   - `resumeAPI.parsePDF(file)`: Sends `multipart/form-data` with `file` field to `http://localhost:8000/api/resume/parse`.
+   - Includes timeout and offline fallback to ensure the demo never crashes if the backend is down.
+3. `client/src/App.jsx` [MODIFY]:
+   - Mount `ResumeUploader.jsx` in the main workflow and pass `onScanComplete={(data) => handleScanComplete(data)}`.
+   - Wire state transition to trigger `ProfileReviewModal` (Part 4).
+
+#### 📡 Backend Contract Reference (`POST /api/resume/parse`)
+* **Endpoint**: `http://localhost:8000/api/resume/parse`
+* **Form-Data**: `file` (`application/pdf`)
+* **Expected Response Schema**:
+  ```json
+  {
+    "candidate_name": "Alex Johnson",
+    "contact_email": "alex@skillforge.ai",
+    "education": "B.Tech Computer Science & Engineering (2022 - 2026)",
+    "current_skills": ["React", "Python", "FastAPI", "SQLite", "Git"],
+    "tools_and_platforms": ["Vite", "GitHub", "Postman", "Vercel"],
+    "projects": [
+      {
+        "title": "E-Commerce API Service",
+        "tech_stack": ["FastAPI", "SQLite"],
+        "description": "Built high-throughput RESTful order processing API."
+      }
+    ],
+    "certifications": ["AWS Certified Cloud Practitioner"]
+  }
+  ```
+
+#### 📋 Step 3 Deliverable Checklist
+- [x] Bespoke SkillForge SVG favicon and Navbar branding created.
+- [x] Dark glassmorphic `ResumeUploader.jsx` created with responsive layout.
+- [x] Drag-and-drop event listeners with drag-over border glow effects.
+- [x] Strict PDF file validation and file size limits (< 10MB).
+- [x] Multi-stage AI scanning animation ticker and smooth progress bar.
+- [x] `POST /api/resume/parse` integration via `services/api.js`.
+- [x] Offline fallback support for zero-error hackathon demo resilience.
+- [x] 1-Click Quick Sample Resume shortcuts for Alex Rivera & Priya Sharma.
+- [ ] Mount ResumeUploader into `App.jsx` and connect `onScanComplete` callback to launch Step 4 (`ProfileReviewModal`).
 
 ---
 

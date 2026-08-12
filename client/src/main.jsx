@@ -5,6 +5,13 @@ import './index.css';
 import { AuthProvider } from './context/AuthContext';
 import { CareerProvider } from './context/CareerContext';
 
+// Ensure dark obsidian theme is permanently active
+document.documentElement.classList.add('dark');
+document.documentElement.classList.remove('light');
+try {
+  localStorage.removeItem('skillforge_theme');
+} catch (e) {}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthProvider>

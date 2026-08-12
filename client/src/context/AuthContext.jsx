@@ -5,28 +5,62 @@ import { DEMO_PERSONAS } from '../services/mockData';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [isGuest, setIsGuest] = useState(true);
-  const [activePersonaKey, setActivePersonaKey] = useState('fullstack');
-  const [loading, setLoading] = useState(true);
+  // Synchronous initialization from localStorage
+  const [activePersonaKey, setActivePersonaKey] = useState(() => {
+    return localStorage.getItem('skillforge_active_persona') || 'fullstack';
+  });
+
+  const [isGuest, setIsGuest] = useState(() => {
+    const hasToken = !!localStorage.getItem('token');
+    return !hasToken;
+  });
+
+  // Default to landing page (null) for fresh visitors unless an active session was explicitly initiated
+  const [user, setUser] = useState(() => {
+    const savedToken = localStorage.getItem('token');
+    const savedUserJson = localStorage.getItem('skillforge_active_user');
+    if (savedToken && savedUserJson) {
+      try {
+        return JSON.parse(savedUserJson);
+      } catch (e) {}
+    }
+
+    // Only restore guest session if explicitly activated by the user previously
+    const isGuestActive = localStorage.getItem('skillforge_guest_active') === 'true';
+    const savedPersona = localStorage.getItem('skillforge_active_persona');
+    if (isGuestActive && savedPersona && DEMO_PERSONAS[savedPersona]) {
+      const persona = DEMO_PERSONAS[savedPersona];
+      return {
+        id: `demo-${savedPersona}`,
+        email: persona.contact_email,
+        name: persona.candidate_name,
+        user_metadata: {
+          full_name: persona.candidate_name,
+          target_role: persona.target_role
+        },
+        isGuest: true
+      };
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
   const [isBackendLive, setIsBackendLive] = useState(false);
 
-  // Initialize session and check backend connectivity
+  // Background check for backend connectivity and JWT validity
   useEffect(() => {
-    async function initializeAuth() {
-      // 1. Check if FastAPI backend is reachable
+    async function verifyBackendAndSession() {
       const backendHealthy = await checkBackendHealth();
       setIsBackendLive(backendHealthy);
 
-      // 2. Check for stored JWT token from Person 2's backend
       const storedToken = localStorage.getItem('token');
       if (storedToken && backendHealthy) {
         try {
           const userData = await authAPI.getMe(storedToken);
           if (userData && userData.email) {
-            setUser({
+            const authenticatedUser = {
               id: userData.id,
               email: userData.email,
               name: userData.name,
@@ -35,44 +69,19 @@ export function AuthProvider({ children }) {
                 target_role: userData.target_role || 'Full-Stack Developer'
               },
               isGuest: false
-            });
+            };
+            setUser(authenticatedUser);
             setIsGuest(false);
-            setLoading(false);
-            return;
+            localStorage.setItem('skillforge_active_user', JSON.stringify(authenticatedUser));
           }
         } catch (err) {
-          // Token expired or invalid, clear it
           localStorage.removeItem('token');
+          localStorage.removeItem('skillforge_active_user');
         }
       }
-
-      // 3. Check if an active guest persona was previously chosen
-      const savedPersona = localStorage.getItem('skillforge_active_persona');
-      if (savedPersona && DEMO_PERSONAS[savedPersona]) {
-        const persona = DEMO_PERSONAS[savedPersona];
-        const demoUser = {
-          id: `demo-${savedPersona}`,
-          email: persona.contact_email,
-          name: persona.candidate_name,
-          user_metadata: {
-            full_name: persona.candidate_name,
-            target_role: persona.target_role
-          },
-          isGuest: true
-        };
-
-        setUser(demoUser);
-        setIsGuest(true);
-        setActivePersonaKey(savedPersona);
-      } else {
-        setUser(null);
-        setIsGuest(false);
-      }
-
-      setLoading(false);
     }
 
-    initializeAuth();
+    verifyBackendAndSession();
   }, []);
 
   /**
@@ -85,84 +94,61 @@ export function AuthProvider({ children }) {
       const data = await authAPI.login({ email, password });
       if (data && data.access_token) {
         localStorage.setItem('token', data.access_token);
-        
+        localStorage.removeItem('skillforge_guest_active');
+        const userData = await authAPI.getMe(data.access_token);
         const authenticatedUser = {
-          id: data.user?.id || 'auth-user',
-          email: data.user?.email || email,
-          name: data.user?.name || email.split('@')[0],
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
           user_metadata: {
-            full_name: data.user?.name || email.split('@')[0],
-            target_role: 'Full-Stack Developer'
+            full_name: userData.name,
+            target_role: userData.target_role || 'Full-Stack Developer'
           },
           isGuest: false
         };
-
         setUser(authenticatedUser);
         setIsGuest(false);
-        setIsAuthLoading(false);
-        return { success: true, user: authenticatedUser };
-      } else {
-        throw new Error('Invalid response from server');
+        localStorage.setItem('skillforge_active_user', JSON.stringify(authenticatedUser));
+        return { success: true };
       }
-    } catch (error) {
-      let message = error.message;
-      if (message.includes('BACKEND_OFFLINE')) {
-        message = 'FastAPI server (Port 8000) is offline. You can use the "1-Click Guest Demo" mode below!';
-      }
-      setAuthError(message);
+    } catch (err) {
+      setAuthError(err.message || 'Login failed. Please check your credentials.');
+      return { success: false, error: err.message };
+    } finally {
       setIsAuthLoading(false);
-      return { success: false, error: message };
     }
   };
 
   /**
-   * Register a new user via FastAPI backend
+   * Register a new student account
    */
-  const registerUser = async (name, email, password, targetRole = 'Full-Stack Developer') => {
+  const registerUser = async (email, password, fullName, targetRole) => {
     setIsAuthLoading(true);
     setAuthError(null);
     try {
-      const data = await authAPI.register({ name, email, password });
-      if (data && data.access_token) {
-        localStorage.setItem('token', data.access_token);
-
-        const newUser = {
-          id: data.user?.id || 'new-user',
-          email: data.user?.email || email,
-          name: data.user?.name || name,
-          user_metadata: {
-            full_name: data.user?.name || name,
-            target_role: targetRole
-          },
-          isGuest: false
-        };
-
-        setUser(newUser);
-        setIsGuest(false);
-        setIsAuthLoading(false);
-        return { success: true, user: newUser };
-      } else {
-        throw new Error('Registration failed: no token received');
-      }
-    } catch (error) {
-      let message = error.message;
-      if (message.includes('BACKEND_OFFLINE')) {
-        message = 'FastAPI server (Port 8000) is offline. You can use the "1-Click Guest Demo" mode below!';
-      }
-      setAuthError(message);
+      await authAPI.register({
+        email,
+        password,
+        name: fullName,
+        target_role: targetRole || 'Full-Stack AI Engineer'
+      });
+      // Automatically log in after registration
+      return await loginUser(email, password);
+    } catch (err) {
+      setAuthError(err.message || 'Registration failed.');
+      return { success: false, error: err.message };
+    } finally {
       setIsAuthLoading(false);
-      return { success: false, error: message };
     }
   };
 
   /**
-   * 1-Click Guest Demo Login (Judge Mode)
-   * Instantly authenticates with a pre-configured persona with 0 friction
+   * 1-Click Sandbox Persona Switcher (Alex / Priya)
    */
   const loginAsDemo = (personaKey = 'fullstack') => {
     const validKey = DEMO_PERSONAS[personaKey] ? personaKey : 'fullstack';
     const persona = DEMO_PERSONAS[validKey];
-    
+
     const demoUser = {
       id: `demo-${validKey}`,
       email: persona.contact_email,
@@ -174,47 +160,51 @@ export function AuthProvider({ children }) {
       isGuest: true
     };
 
+    localStorage.removeItem('token');
+    localStorage.removeItem('skillforge_active_user');
+    localStorage.setItem('skillforge_guest_active', 'true');
+    localStorage.setItem('skillforge_active_persona', validKey);
+
     setUser(demoUser);
     setIsGuest(true);
     setActivePersonaKey(validKey);
-    setAuthError(null);
-    
-    // Cache demo selection for quick reload
-    localStorage.removeItem('token'); // In guest mode, do not send outdated server token
-    localStorage.setItem('skillforge_active_persona', validKey);
-    localStorage.setItem('skillforge_active_user', JSON.stringify(demoUser));
-
-    return { success: true, user: demoUser };
   };
 
   /**
-   * Log out and reset session state
+   * Sign out and clear stored session
    */
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('skillforge_active_user');
+    localStorage.removeItem('skillforge_guest_active');
     localStorage.removeItem('skillforge_active_persona');
     setUser(null);
     setIsGuest(false);
-    setAuthError(null);
+    setActivePersonaKey('fullstack');
   };
 
-  const clearAuthError = () => setAuthError(null);
+  /**
+   * Clear any active authentication error
+   */
+  const clearAuthError = () => {
+    setAuthError(null);
+  };
 
   return (
     <AuthContext.Provider value={{
       user,
       isGuest,
       activePersonaKey,
+      loading,
+      isAuthLoading,
+      authError,
+      isBackendLive,
       loginUser,
       registerUser,
       loginAsDemo,
       logout,
-      loading,
-      isAuthLoading,
-      authError,
-      clearAuthError,
-      isBackendLive
+      setAuthError,
+      clearAuthError
     }}>
       {children}
     </AuthContext.Provider>

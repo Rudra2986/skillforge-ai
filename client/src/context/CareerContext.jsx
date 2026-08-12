@@ -7,34 +7,43 @@ const CareerContext = createContext(null);
 export function CareerProvider({ children }) {
   const { activePersonaKey } = useAuth();
 
-  // Initialize from active demo persona or localStorage
-  const [careerData, setCareerData] = useState(() => {
-    const savedPersona = localStorage.getItem('skillforge_active_persona') || 'fullstack';
-    const persona = DEMO_PERSONAS[savedPersona] || DEMO_PERSONAS.fullstack;
-    const savedData = localStorage.getItem(`skillforge_career_${savedPersona}`);
-    if (savedData) {
+  // Helper to get sanitized persona data
+  const getPersonaData = (key) => {
+    const validKey = DEMO_PERSONAS[key] ? key : 'fullstack';
+    const defaultPersona = DEMO_PERSONAS[validKey];
+    const savedDataStr = localStorage.getItem(`skillforge_career_${validKey}`);
+    
+    if (savedDataStr) {
       try {
-        return JSON.parse(savedData);
+        const parsed = JSON.parse(savedDataStr);
+        // Ensure name matches the expected persona to prevent cross-contamination
+        if (parsed && parsed.candidate_name === defaultPersona.candidate_name) {
+          return parsed;
+        }
       } catch (e) {
-        // fallback
+        // ignore and fallback
       }
     }
-    return persona;
+    return defaultPersona;
+  };
+
+  // Initialize from active demo persona
+  const [careerData, setCareerData] = useState(() => {
+    const savedPersona = localStorage.getItem('skillforge_active_persona') || 'fullstack';
+    return getPersonaData(savedPersona);
   });
+
+  // Track if roadmap has been explicitly generated in this active session (starts false by default)
+  const [hasGeneratedRoadmap, setHasGeneratedRoadmap] = useState(false);
 
   // Keep state synced with active persona switch
   useEffect(() => {
     if (activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
-      const savedData = localStorage.getItem(`skillforge_career_${activePersonaKey}`);
-      if (savedData) {
-        try {
-          setCareerData(JSON.parse(savedData));
-          return;
-        } catch (e) {}
-      }
-      const persona = DEMO_PERSONAS[activePersonaKey];
-      setCareerData(persona);
-      localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(persona));
+      const data = getPersonaData(activePersonaKey);
+      setCareerData(data);
+      localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));
+      // Reset generated state when explicitly switching persona so user undergoes the fresh scan flow
+      setHasGeneratedRoadmap(false);
     }
   }, [activePersonaKey]);
 
@@ -43,6 +52,19 @@ export function CareerProvider({ children }) {
     setCareerData(newData);
     const key = activePersonaKey || 'fullstack';
     localStorage.setItem(`skillforge_career_${key}`, JSON.stringify(newData));
+  };
+
+  // Force reset a persona to fresh default demo data
+  const resetPersonaData = (key) => {
+    const validKey = DEMO_PERSONAS[key] ? key : 'fullstack';
+    const pristine = DEMO_PERSONAS[validKey];
+    localStorage.setItem(`skillforge_career_${validKey}`, JSON.stringify(pristine));
+    localStorage.removeItem(`skillforge_roadmap_generated_${validKey}`);
+    setHasGeneratedRoadmap(false);
+    if (activePersonaKey === validKey) {
+      setCareerData(pristine);
+    }
+    return pristine;
   };
 
   // Toggle milestone completion & recalculate readiness score dynamically
@@ -72,20 +94,25 @@ export function CareerProvider({ children }) {
     saveCareerData(updatedData);
   };
 
-  // Human-in-the-Loop Profile Update (Called after Step 2 verification)
+  // Human-in-the-Loop Profile Update (Called after Step 2/3 verification)
   const updateVerifiedProfile = (verifiedFields) => {
+    const key = activePersonaKey || 'fullstack';
     const updatedData = {
       ...careerData,
       ...verifiedFields,
-      summary_assessment: `Profile updated with ${verifiedFields.current_skills?.length || 0} verified skills targeting ${verifiedFields.target_role}.`
+      summary_assessment: `Profile verified with ${verifiedFields.current_skills?.length || 0} skills targeting ${verifiedFields.target_role || careerData.target_role}.`
     };
     saveCareerData(updatedData);
+    setHasGeneratedRoadmap(true);
   };
 
   return (
     <CareerContext.Provider value={{
       careerData,
+      hasGeneratedRoadmap,
+      setHasGeneratedRoadmap,
       saveCareerData,
+      resetPersonaData,
       toggleMilestone,
       updateVerifiedProfile
     }}>
