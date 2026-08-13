@@ -122,17 +122,36 @@ export function AuthProvider({ children }) {
   /**
    * Register a new student account
    */
-  const registerUser = async (email, password, fullName, targetRole) => {
+  const registerUser = async (name, email, password, targetRole) => {
     setIsAuthLoading(true);
     setAuthError(null);
     try {
-      await authAPI.register({
+      const data = await authAPI.register({
+        name,
         email,
-        password,
-        name: fullName,
-        target_role: targetRole || 'Full-Stack AI Engineer'
+        password
       });
-      // Automatically log in after registration
+
+      if (data && data.access_token) {
+        localStorage.setItem('token', data.access_token);
+        localStorage.removeItem('skillforge_guest_active');
+        const authenticatedUser = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          user_metadata: {
+            full_name: data.user.name,
+            target_role: targetRole || 'Full-Stack AI Engineer'
+          },
+          isGuest: false
+        };
+        setUser(authenticatedUser);
+        setIsGuest(false);
+        localStorage.setItem('skillforge_active_user', JSON.stringify(authenticatedUser));
+        return { success: true };
+      }
+
+      // Fallback: log in if token not in response
       return await loginUser(email, password);
     } catch (err) {
       setAuthError(err.message || 'Registration failed.');

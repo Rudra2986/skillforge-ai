@@ -399,13 +399,23 @@ export default function App() {
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-neutral-100">
-                  {careerData?.candidate_name || user?.user_metadata?.full_name || (activePersonaKey === 'datascience' ? 'Priya Sharma' : 'Alex Rivera')}
+                  {!isGuest && user
+                    ? (hasGeneratedRoadmap && careerData?.candidate_name ? careerData.candidate_name : (user.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'))
+                    : (careerData?.candidate_name || (activePersonaKey === 'datascience' ? 'Priya Sharma' : 'Alex Rivera'))
+                  }
                 </h1>
                 <p className="text-sm text-neutral-400">
-                  {careerData?.education || 'Computer Science & Engineering'} • {hasGeneratedRoadmap ? (
-                    <>Targeting <span className="text-neutral-200 font-semibold">{careerData?.target_role}</span></>
+                  {!isGuest && user ? (
+                    hasGeneratedRoadmap && careerData?.education
+                      ? `${careerData.education} • `
+                      : `${user.user_metadata?.target_role ? `Target: ${user.user_metadata.target_role}` : 'Target: Full-Stack AI Engineer'} • `
                   ) : (
-                    <span className="text-accent-text font-medium">Upload or select resume below to build roadmap</span>
+                    `${careerData?.education || 'B.Tech Computer Science'} • `
+                  )}
+                  {hasGeneratedRoadmap ? (
+                    <>Targeting <span className="text-neutral-200 font-semibold">{careerData?.target_role || user?.user_metadata?.target_role}</span></>
+                  ) : (
+                    <span className="text-accent-text font-medium">Upload your PDF resume below to build your personalized roadmap</span>
                   )}
                 </p>
               </div>

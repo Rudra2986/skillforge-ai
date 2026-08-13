@@ -34,9 +34,20 @@ async function request(endpoint, options = {}) {
     const data = isJson ? await response.json() : await response.text();
 
     if (!response.ok) {
-      const errorMessage = (typeof data === 'object' && (data.detail || data.message))
-        ? (data.detail || data.message)
-        : `Request failed with status ${response.status}`;
+      let errorMessage = `Request failed with status ${response.status}`;
+      if (typeof data === 'object' && data !== null) {
+        if (typeof data.detail === 'string') {
+          errorMessage = data.detail;
+        } else if (Array.isArray(data.detail) && data.detail.length > 0) {
+          errorMessage = data.detail.map(d => d.msg || d.loc?.join('.') || JSON.stringify(d)).join(' | ');
+        } else if (data.message) {
+          errorMessage = typeof data.message === 'string' ? data.message : JSON.stringify(data.message);
+        } else {
+          errorMessage = JSON.stringify(data);
+        }
+      } else if (typeof data === 'string' && data.length > 0) {
+        errorMessage = data;
+      }
       throw new Error(errorMessage);
     }
 
@@ -179,10 +190,58 @@ export const progressAPI = {
   }
 };
 
+/**
+ * AI Intelligence Endpoints (Person 3 Backend Contract)
+ */
+export const aiAPI = {
+  /**
+   * Stage 1 — Normalize raw PDF text into StructuredResumeProfile via Gemini
+   * POST /api/ai/normalize-resume
+   */
+  async normalizeResume(rawText) {
+    return request('/api/ai/normalize-resume', {
+      method: 'POST',
+      body: JSON.stringify({ raw_text: rawText })
+    });
+  },
+
+  /**
+   * Stage 2 — Full skill gap analysis + roadmap generation
+   * POST /api/ai/analyze-gap (requires JWT)
+   */
+  async analyzeGap(profile, targetRole, timelineWeeks = 12) {
+    return request('/api/ai/analyze-gap', {
+      method: 'POST',
+      body: JSON.stringify({
+        profile,
+        target_role: targetRole,
+        timeline_weeks: timelineWeeks
+      })
+    });
+  },
+
+  /**
+   * Stage 3 — Evaluate mock interview answer
+   * POST /api/ai/evaluate-answer
+   */
+  async evaluateAnswer(question, userAnswer, idealPoints) {
+    return request('/api/ai/evaluate-answer', {
+      method: 'POST',
+      body: JSON.stringify({
+        question,
+        user_answer: userAnswer,
+        ideal_points: idealPoints
+      })
+    });
+  }
+};
+
 export default {
   API_BASE_URL,
   checkBackendHealth,
   authAPI,
   resumeAPI,
-  progressAPI
+  progressAPI,
+  aiAPI
 };
+
