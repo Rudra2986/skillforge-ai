@@ -52,9 +52,11 @@ export default function ReadinessScoreCard({
     return relevantKeywords.some(k => sLower.includes(k) || k.includes(sLower));
   });
 
-  const skillsCount = matchedRoleSkills.length;
-  const skillsTarget = Math.max(10, skillsCount + 4);
-  const skillsProgressPercent = Math.min(100, Math.round((skillsCount / skillsTarget) * 100));
+  const roleMatchCount = matchedRoleSkills.length;
+  // Standard hiring benchmark: 8 core matching competencies for full target role coverage
+  const roleBenchmarkTarget = 8;
+  const skillsProgressPercent = Math.min(100, Math.round((roleMatchCount / roleBenchmarkTarget) * 100));
+  const totalVerifiedCount = skills.length;
 
   const projectsCount = projects.length || 0;
   const projectsTarget = 2;
@@ -168,7 +170,7 @@ export default function ReadinessScoreCard({
           
           <div className="text-right font-mono text-[11px] text-neutral-400 space-y-0.5">
             <div><span className="text-neutral-200 font-semibold">{completedMilestones}/{totalMilestones}</span> phases</div>
-            <div><span className="text-neutral-200 font-semibold">{skillsCount}</span> skills</div>
+            <div><span className="text-neutral-200 font-semibold">{totalVerifiedCount}</span> verified skills</div>
           </div>
         </div>
 
@@ -228,7 +230,7 @@ export default function ReadinessScoreCard({
               </div>
               <div>
                 <div className="text-neutral-200 font-medium">Core Skills Match</div>
-                <div className="text-[11px] text-neutral-400">{skillsCount} of {skillsTarget} competencies verified</div>
+                <div className="text-[11px] text-neutral-400">{roleMatchCount} of {roleBenchmarkTarget}+ core competencies verified</div>
               </div>
             </div>
             <span className="font-mono text-[11px] font-semibold text-blue-400 px-2 py-0.5 rounded bg-blue-950/40 border border-blue-800/40">

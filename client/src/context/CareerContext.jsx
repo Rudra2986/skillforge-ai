@@ -26,16 +26,17 @@ export function CareerProvider({ children }) {
 
   // Multi-factor benchmark readiness score formula (Exact sum: 40% Skills + 40% Roadmap + 20% Projects)
   const calculateReadinessScore = (skills = [], roadmap = [], projects = [], targetRole = "Full-Stack AI Engineer") => {
-    // Technical Skills: Only calculate skills that are relevant to target job benchmark (Up to 40%)
+    // Technical Skills: Calculate how well the verified skills align with the target job benchmark (Up to 40%)
     const relevantKeywords = getTargetRoleKeywords(targetRole);
     const matchedRoleSkills = (skills || []).filter(s => {
       const sLower = (s || '').toLowerCase();
       return relevantKeywords.some(k => sLower.includes(k) || k.includes(sLower));
     });
 
-    const matchedSkillsCount = matchedRoleSkills.length;
-    const roleBenchmarkTotal = Math.max(10, matchedSkillsCount + 4);
-    const skillsProgressPercent = Math.min(100, Math.round((matchedSkillsCount / roleBenchmarkTotal) * 100));
+    const roleMatchCount = matchedRoleSkills.length;
+    // Standard industry benchmark: 8 core matching competencies for full target role coverage
+    const roleBenchmarkTarget = 8;
+    const skillsProgressPercent = Math.min(100, Math.round((roleMatchCount / roleBenchmarkTarget) * 100));
     const skillsScore = Math.round((skillsProgressPercent / 100) * 40);
 
     // Roadmap Milestone Execution: Up to 40%
