@@ -126,6 +126,11 @@ export function AuthProvider({ children }) {
     setIsAuthLoading(true);
     setAuthError(null);
     try {
+      // Clear any prior cached roadmap from other accounts
+      localStorage.removeItem('skillforge_user_career_data');
+      localStorage.removeItem('skillforge_has_generated_roadmap');
+      localStorage.removeItem('skillforge_guest_active');
+
       const data = await authAPI.register({
         name,
         email,
@@ -134,7 +139,6 @@ export function AuthProvider({ children }) {
 
       if (data && data.access_token) {
         localStorage.setItem('token', data.access_token);
-        localStorage.removeItem('skillforge_guest_active');
         const authenticatedUser = {
           id: data.user.id,
           email: data.user.email,

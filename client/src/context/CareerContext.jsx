@@ -76,23 +76,54 @@ export function CareerProvider({ children }) {
   useEffect(() => {
     async function loadBackendRoadmap() {
       const token = localStorage.getItem('token');
-      if (token) {
+      if (token && user?.id) {
         try {
           const savedPackage = await progressAPI.getSavedRoadmap();
           if (savedPackage && savedPackage.roadmap && savedPackage.roadmap.length > 0) {
             setCareerData(savedPackage);
             setHasGeneratedRoadmap(true);
             localStorage.setItem('skillforge_has_generated_roadmap', 'true');
-            localStorage.setItem('skillforge_user_career_data', JSON.stringify(savedPackage));
+            localStorage.setItem(`skillforge_user_career_${user.id}`, JSON.stringify(savedPackage));
+            return;
           }
         } catch (err) {
-          // No saved roadmap in backend yet for this user
+          // Fresh new user who hasn't uploaded a resume yet
         }
+
+        // Check if there is cached data specifically for this user
+        const userCache = localStorage.getItem(`skillforge_user_career_${user.id}`);
+        if (userCache) {
+          try {
+            const parsed = JSON.parse(userCache);
+            if (parsed && parsed.roadmap && parsed.roadmap.length > 0) {
+              setCareerData(parsed);
+              setHasGeneratedRoadmap(true);
+              return;
+            }
+          } catch (e) {}
+        }
+
+        // New user with no roadmap yet: require Resume Ingestion first!
+        setCareerData({
+          candidate_name: user.name || user.user_metadata?.full_name || 'Candidate',
+          education: '',
+          target_role: user.user_metadata?.target_role || 'Full-Stack AI Engineer',
+          current_skills: [],
+          readiness_score: 0,
+          roadmap: [],
+          projects: [],
+          skills_missing: [],
+          skills_present: []
+        });
+        setHasGeneratedRoadmap(false);
+        localStorage.removeItem('skillforge_has_generated_roadmap');
       }
     }
 
-    loadBackendRoadmap();
-  }, [user?.id, isGuest]);
+    if (user?.id) {
+      loadBackendRoadmap();
+    }
+  }, [user?.id]);
 
   // Keep state synced with active persona switch ONLY when explicitly chosen in guest mode
   useEffect(() => {
@@ -112,6 +143,10 @@ export function CareerProvider({ children }) {
     setCareerData(newData);
     setHasGeneratedRoadmap(true);
     localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+    
+    if (user?.id) {
+      localStorage.setItem(`skillforge_user_career_${user.id}`, JSON.stringify(newData));
+    }
     localStorage.setItem('skillforge_user_career_data', JSON.stringify(newData));
 
     const key = activePersonaKey || 'fullstack';
