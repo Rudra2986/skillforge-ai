@@ -407,7 +407,10 @@ export default function App() {
                 </div>
               </div>
 
-              <ResumeUploader onScanComplete={handleScanComplete} />
+              <ResumeUploader 
+                onScanComplete={handleScanComplete} 
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+              />
             </section>
 
           </div>
@@ -587,7 +590,10 @@ export default function App() {
 
             {/* TAB CONTENT A: SCANNER / RESUME UPLOADER */}
             {!hasGeneratedRoadmap || activeDashboardTab === 'scanner' ? (
-              <ResumeUploader onScanComplete={handleScanComplete} />
+              <ResumeUploader 
+                onScanComplete={handleScanComplete} 
+                onOpenAuthModal={() => setIsAuthModalOpen(true)}
+              />
             ) : activeDashboardTab === 'projects' ? (
               /* TAB CONTENT C: DEDICATED CAPSTONE PROJECTS & CERTIFICATIONS PAGE */
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

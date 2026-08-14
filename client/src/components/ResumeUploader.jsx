@@ -22,7 +22,7 @@ import {
   FileCheck2
 } from 'lucide-react';
 
-export default function ResumeUploader({ onScanComplete }) {
+export default function ResumeUploader({ onScanComplete, onOpenAuthModal }) {
   const { user, isGuest, activePersonaKey } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -72,6 +72,13 @@ export default function ResumeUploader({ onScanComplete }) {
   const handleFileSelected = (file) => {
     setErrorMessage(null);
     setExtractedSummary(null);
+
+    // Require real student login before uploading custom PDF resumes
+    if (!user || isGuest) {
+      setErrorMessage('🔒 Custom resume scanning requires a student account. Please sign in or use the sample demo resume below to test extraction.');
+      if (onOpenAuthModal) onOpenAuthModal();
+      return;
+    }
 
     // Validate file type (must be PDF)
     const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
@@ -217,7 +224,13 @@ export default function ResumeUploader({ onScanComplete }) {
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              if (!user || isGuest) {
+                if (onOpenAuthModal) onOpenAuthModal();
+              } else {
+                fileInputRef.current?.click();
+              }
+            }}
             className={`group relative border-2 border-dashed rounded-xl p-8 sm:p-14 text-center cursor-pointer interactive-transition flex flex-col items-center justify-center space-y-4 overflow-hidden ${
               dragActive
                 ? 'border-accent bg-accent/15 scale-[1.01] shadow-lg shadow-accent/20'
@@ -240,12 +253,25 @@ export default function ResumeUploader({ onScanComplete }) {
             </div>
 
             <div className="space-y-1.5 max-w-sm">
-              <div className="text-sm sm:text-base font-semibold text-neutral-100 group-hover:text-accent-text interactive-transition">
-                Drag and drop your PDF resume here, or <span className="underline text-accent-text">browse files</span>
-              </div>
-              <p className="text-xs text-neutral-400">
-                PDF documents up to 10MB • Multi-column layouts supported
-              </p>
+              {(!user || isGuest) ? (
+                <>
+                  <div className="text-sm sm:text-base font-semibold text-neutral-100 group-hover:text-accent-text interactive-transition flex items-center justify-center gap-1.5">
+                    <span>🔒 Sign In to upload your custom PDF resume</span>
+                  </div>
+                  <p className="text-xs text-accent-text font-medium">
+                    Or click a sample demo resume below to test instant AI extraction
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="text-sm sm:text-base font-semibold text-neutral-100 group-hover:text-accent-text interactive-transition">
+                    Drag and drop your PDF resume here, or <span className="underline text-accent-text">browse files</span>
+                  </div>
+                  <p className="text-xs text-neutral-400">
+                    PDF documents up to 10MB • Multi-column layouts supported
+                  </p>
+                </>
+              )}
             </div>
 
             {/* Quick Demo Resume Load - ONLY FOR EXPLORE DEMO ACCOUNTS & LANDING PREVIEW */}
