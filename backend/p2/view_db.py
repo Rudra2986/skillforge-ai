@@ -9,8 +9,13 @@ for d in (backend_dir, parent_dir):
         sys.path.insert(0, d)
 
 from sqlmodel import Session, select
-from backend.database import engine
-from backend.models import User, SavedResume, RoadmapRecord
+
+try:
+    from p2.database import engine
+    from p2.models import User, SavedResume, RoadmapRecord
+except ImportError:
+    from database import engine
+    from models import User, SavedResume, RoadmapRecord
 
 
 def show_database():
