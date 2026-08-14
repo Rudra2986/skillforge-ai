@@ -12,7 +12,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "p2"))
 
 from fastapi.testclient import TestClient
 from p2.main import app
+from p2.database import init_db
 
+init_db()
 client = TestClient(app)
 
 PASS = "[PASS]"
