@@ -29,14 +29,32 @@ export default function ReadinessScoreCard({
     ? Math.round((completedMilestones / totalMilestones) * 100) 
     : 0;
 
-  const skillsCount = skills.length || 0;
-  const missingFromRoadmap = roadmap.filter(
-    m => m.skill && !skills.some(s => s.toLowerCase() === m.skill.toLowerCase())
-  ).length;
-  const skillsTarget = Math.max(skillsCount, skillsCount + missingFromRoadmap, 1);
-  const skillsProgressPercent = skillsTarget > 0 
-    ? Math.min(100, Math.round((skillsCount / skillsTarget) * 100)) 
-    : 100;
+  // Role keyword benchmark dictionary
+  const ROLE_BENCHMARK_KEYWORDS = {
+    ai: ["python", "pytorch", "tensorflow", "keras", "fastapi", "scikit-learn", "xgboost", "pandas", "numpy", "docker", "mlflow", "nlp", "transformers", "langchain", "pgvector", "redis", "kubernetes", "sql", "postgresql", "rest apis", "react.js", "react"],
+    data: ["python", "pandas", "numpy", "sql", "scikit-learn", "xgboost", "matplotlib", "seaborn", "pytorch", "tensorflow", "spark", "pyspark", "airflow", "postgresql", "tableau", "power bi", "mlflow", "statistics", "data modeling"],
+    fullstack: ["javascript", "typescript", "react", "react.js", "node.js", "express", "python", "fastapi", "html", "css", "tailwind", "sql", "postgresql", "mongodb", "docker", "rest apis", "graphql", "redis", "git", "ci/cd"],
+    devops: ["docker", "kubernetes", "terraform", "aws", "linux", "bash", "ci/cd", "github actions", "prometheus", "grafana", "nginx", "python", "ansible", "helm", "networking"]
+  };
+
+  const getTargetRoleKeywords = (roleStr) => {
+    const r = (roleStr || '').toLowerCase();
+    if (r.includes('data') || r.includes('analytics')) return ROLE_BENCHMARK_KEYWORDS.data;
+    if (r.includes('devops') || r.includes('cloud') || r.includes('infrastructure')) return ROLE_BENCHMARK_KEYWORDS.devops;
+    if (r.includes('ai') || r.includes('ml') || r.includes('machine')) return ROLE_BENCHMARK_KEYWORDS.ai;
+    return ROLE_BENCHMARK_KEYWORDS.fullstack;
+  };
+
+  // Only calculate skills related to target role benchmark
+  const relevantKeywords = getTargetRoleKeywords(targetRole);
+  const matchedRoleSkills = (skills || []).filter(s => {
+    const sLower = (s || '').toLowerCase();
+    return relevantKeywords.some(k => sLower.includes(k) || k.includes(sLower));
+  });
+
+  const skillsCount = matchedRoleSkills.length;
+  const skillsTarget = Math.max(10, skillsCount + 4);
+  const skillsProgressPercent = Math.min(100, Math.round((skillsCount / skillsTarget) * 100));
 
   const projectsCount = projects.length || 0;
   const projectsTarget = 2;

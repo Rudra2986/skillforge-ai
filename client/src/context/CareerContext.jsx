@@ -8,23 +8,43 @@ const CareerContext = createContext(null);
 export function CareerProvider({ children }) {
   const { user, isGuest, activePersonaKey } = useAuth();
 
+  // Role keyword benchmark dictionary
+  const ROLE_BENCHMARK_KEYWORDS = {
+    ai: ["python", "pytorch", "tensorflow", "keras", "fastapi", "scikit-learn", "xgboost", "pandas", "numpy", "docker", "mlflow", "nlp", "transformers", "langchain", "pgvector", "redis", "kubernetes", "sql", "postgresql", "rest apis", "react.js", "react"],
+    data: ["python", "pandas", "numpy", "sql", "scikit-learn", "xgboost", "matplotlib", "seaborn", "pytorch", "tensorflow", "spark", "pyspark", "airflow", "postgresql", "tableau", "power bi", "mlflow", "statistics", "data modeling"],
+    fullstack: ["javascript", "typescript", "react", "react.js", "node.js", "express", "python", "fastapi", "html", "css", "tailwind", "sql", "postgresql", "mongodb", "docker", "rest apis", "graphql", "redis", "git", "ci/cd"],
+    devops: ["docker", "kubernetes", "terraform", "aws", "linux", "bash", "ci/cd", "github actions", "prometheus", "grafana", "nginx", "python", "ansible", "helm", "networking"]
+  };
+
+  const getTargetRoleKeywords = (roleStr) => {
+    const r = (roleStr || '').toLowerCase();
+    if (r.includes('data') || r.includes('analytics')) return ROLE_BENCHMARK_KEYWORDS.data;
+    if (r.includes('devops') || r.includes('cloud') || r.includes('infrastructure')) return ROLE_BENCHMARK_KEYWORDS.devops;
+    if (r.includes('ai') || r.includes('ml') || r.includes('machine')) return ROLE_BENCHMARK_KEYWORDS.ai;
+    return ROLE_BENCHMARK_KEYWORDS.fullstack;
+  };
+
   // Multi-factor benchmark readiness score formula (Exact sum: 40% Skills + 40% Roadmap + 20% Projects)
-  const calculateReadinessScore = (skills = [], roadmap = [], projects = []) => {
-    // Technical Skills: Up to 40%
-    const skillsCount = skills.length || 0;
-    const missingSkillsCount = roadmap.filter(
-      m => m.skill && !skills.some(s => s.toLowerCase() === m.skill.toLowerCase())
-    ).length;
-    const targetSkillsCount = Math.max(skillsCount, skillsCount + missingSkillsCount, 1);
-    const skillsScore = Math.min(40, Math.round((skillsCount / targetSkillsCount) * 40));
+  const calculateReadinessScore = (skills = [], roadmap = [], projects = [], targetRole = "Full-Stack AI Engineer") => {
+    // Technical Skills: Only calculate skills that are relevant to target job benchmark (Up to 40%)
+    const relevantKeywords = getTargetRoleKeywords(targetRole);
+    const matchedRoleSkills = (skills || []).filter(s => {
+      const sLower = (s || '').toLowerCase();
+      return relevantKeywords.some(k => sLower.includes(k) || k.includes(sLower));
+    });
+
+    const matchedSkillsCount = matchedRoleSkills.length;
+    const roleBenchmarkTotal = Math.max(10, matchedSkillsCount + 4);
+    const skillsProgressPercent = Math.min(100, Math.round((matchedSkillsCount / roleBenchmarkTotal) * 100));
+    const skillsScore = Math.round((skillsProgressPercent / 100) * 40);
 
     // Roadmap Milestone Execution: Up to 40%
-    const completedCount = roadmap.filter(m => m.completed).length;
-    const totalMilestones = roadmap.length || 3;
+    const completedCount = (roadmap || []).filter(m => m.completed).length;
+    const totalMilestones = (roadmap || []).length || 3;
     const milestoneScore = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 40) : 0;
 
     // Portfolio Proof Projects: Up to 20%
-    const projectsCount = projects.length || 0;
+    const projectsCount = (projects || []).length || 0;
     const projectsTarget = 2;
     const projectScore = Math.min(20, Math.round((projectsCount / projectsTarget) * 20));
 
