@@ -54,7 +54,7 @@ app.include_router(progress.router)
 app.include_router(ai.router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root():
     return {
         "message": "SkillForge AI Core Backend API is running!",
@@ -69,7 +69,7 @@ from p2.database import engine, DB_PATH
 from p2.models import User, SavedResume, RoadmapRecord
 
 
-@app.get("/api/health")
+@app.api_route("/api/health", methods=["GET", "HEAD"])
 def health_check():
     return {
         "status": "healthy",
