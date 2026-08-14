@@ -51,10 +51,15 @@ export default function App() {
     hasGeneratedRoadmap, 
     updateVerifiedProfile, 
     toggleMilestone,
+    calculateReadinessScore,
     addSkill,
     removeSkill,
     addOrToggleProject
   } = useCareer();
+
+  const heroReadinessScore = calculateReadinessScore
+    ? calculateReadinessScore(careerData?.current_skills || [], careerData?.roadmap || [], careerData?.projects || [])
+    : (careerData?.readiness_score || 40);
 
   const handleInlineAddSkill = (e) => {
     e.preventDefault();
@@ -483,7 +488,7 @@ export default function App() {
                       <div className="space-y-0.5">
                         <div className="text-[10px] font-mono text-neutral-400 uppercase">Readiness</div>
                         <div className="text-base font-bold text-neutral-100">
-                          {careerData?.readiness_score || 64}%
+                          {heroReadinessScore}%
                         </div>
                       </div>
                       <div className="relative w-8 h-8 flex items-center justify-center">
@@ -497,7 +502,7 @@ export default function App() {
                           />
                           <path
                             className="text-accent transition-all duration-500 ease-out"
-                            strokeDasharray={`${careerData?.readiness_score || 64}, 100`}
+                            strokeDasharray={`${heroReadinessScore}, 100`}
                             strokeWidth="3.2"
                             strokeLinecap="round"
                             stroke="currentColor"

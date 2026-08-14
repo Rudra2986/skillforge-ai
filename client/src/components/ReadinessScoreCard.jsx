@@ -49,9 +49,9 @@ export default function ReadinessScoreCard({
   const milestoneContrib = (milestoneProgressPercent / 100) * 40;
   const projectsContrib = (projectsProgressPercent / 100) * 20;
 
-  // Total placement readiness score: synchronized with central careerData score
-  const calculatedSum = Math.min(100, Math.max(0, Math.round(skillsContrib + milestoneContrib + projectsContrib)));
-  const targetReadinessScore = typeof score === 'number' && score > 0 ? score : calculatedSum;
+  // Total placement readiness score is the EXACT sum of all 3 parts (40% Skills + 40% Roadmap + 20% Projects)
+  const totalSumScore = Math.min(100, Math.max(0, Math.round(skillsContrib + milestoneContrib + projectsContrib)));
+  const targetReadinessScore = totalSumScore;
 
   // Smooth number counter animating to targetReadinessScore
   useEffect(() => {

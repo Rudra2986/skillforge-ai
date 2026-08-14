@@ -266,7 +266,7 @@ export function CareerProvider({ children }) {
     const updatedData = {
       ...careerData,
       ...verifiedFields,
-      readiness_score: verifiedFields.readiness_score || newScore,
+      readiness_score: newScore,
       summary_assessment: `Profile verified with ${newSkills.length} skills targeting ${verifiedFields.target_role || careerData.target_role}.`
     };
 
@@ -282,6 +282,7 @@ export function CareerProvider({ children }) {
       setHasGeneratedRoadmap,
       saveCareerData,
       resetPersonaData,
+      calculateReadinessScore,
       toggleMilestone,
       addSkill,
       removeSkill,
