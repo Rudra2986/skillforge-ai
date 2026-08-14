@@ -425,19 +425,75 @@ export default function AuthModal({ isOpen, onClose }) {
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-neutral-300 flex items-center space-x-1.5">
-                  <Lock className="w-3.5 h-3.5 text-neutral-400" />
-                  <span>Password</span>
-                </label>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-neutral-300 flex items-center space-x-1.5">
+                    <Lock className="w-3.5 h-3.5 text-neutral-400" />
+                    <span>Password</span>
+                  </label>
+                  {signUpPassword && (
+                    <span className={`text-[10px] font-mono font-semibold ${
+                      signUpPassword.length < 6
+                        ? 'text-rose-400'
+                        : (/[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword) && /\d/.test(signUpPassword) && /[^A-Za-z0-9]/.test(signUpPassword) && signUpPassword.length >= 8)
+                        ? 'text-emerald-400'
+                        : signUpPassword.length >= 8 && ((/[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword)) || /\d/.test(signUpPassword))
+                        ? 'text-blue-400'
+                        : 'text-amber-400'
+                    }`}>
+                      {signUpPassword.length < 6
+                        ? 'Too short'
+                        : (/[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword) && /\d/.test(signUpPassword) && /[^A-Za-z0-9]/.test(signUpPassword) && signUpPassword.length >= 8)
+                        ? '✓ Strong & Secure'
+                        : signUpPassword.length >= 8 && ((/[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword)) || /\d/.test(signUpPassword))
+                        ? 'Good'
+                        : 'Fair'}
+                    </span>
+                  )}
+                </div>
+
                 <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder="Min. 8 characters with number & symbol"
                   value={signUpPassword}
                   onChange={(e) => setSignUpPassword(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-lg bg-canvas-surface border border-border text-neutral-100 placeholder-neutral-500 focus:border-accent"
                 />
+
+                {/* 4-Segment Password Strength Progress Bar */}
+                {signUpPassword && (
+                  <div className="space-y-1 pt-0.5 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-4 gap-1.5 h-1">
+                      <div className={`h-full rounded-full transition-all duration-300 ${
+                        signUpPassword.length > 0
+                          ? signUpPassword.length < 6 ? 'bg-rose-500' : 'bg-amber-500'
+                          : 'bg-neutral-700'
+                      }`} />
+                      <div className={`h-full rounded-full transition-all duration-300 ${
+                        signUpPassword.length >= 6
+                          ? signUpPassword.length >= 8 ? 'bg-blue-500' : 'bg-amber-500'
+                          : 'bg-neutral-700'
+                      }`} />
+                      <div className={`h-full rounded-full transition-all duration-300 ${
+                        signUpPassword.length >= 8 && ((/[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword)) || /\d/.test(signUpPassword))
+                          ? 'bg-blue-500'
+                          : 'bg-neutral-700'
+                      }`} />
+                      <div className={`h-full rounded-full transition-all duration-300 ${
+                        signUpPassword.length >= 8 && /[a-z]/.test(signUpPassword) && /[A-Z]/.test(signUpPassword) && /\d/.test(signUpPassword) && /[^A-Za-z0-9]/.test(signUpPassword)
+                          ? 'bg-emerald-500'
+                          : 'bg-neutral-700'
+                      }`} />
+                    </div>
+                    <div className="flex items-center justify-between text-[10px] text-neutral-400 font-mono pt-0.5">
+                      <span className={signUpPassword.length >= 8 ? 'text-emerald-400' : 'text-neutral-500'}>8+ chars</span>
+                      <span className={/[A-Z]/.test(signUpPassword) && /[a-z]/.test(signUpPassword) ? 'text-emerald-400' : 'text-neutral-500'}>Aa</span>
+                      <span className={/\d/.test(signUpPassword) ? 'text-emerald-400' : 'text-neutral-500'}>123</span>
+                      <span className={/[^A-Za-z0-9]/.test(signUpPassword) ? 'text-emerald-400' : 'text-neutral-500'}>#$&amp;</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button
