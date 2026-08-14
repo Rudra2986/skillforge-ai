@@ -49,13 +49,14 @@ export default function ReadinessScoreCard({
   const milestoneContrib = (milestoneProgressPercent / 100) * 40;
   const projectsContrib = (projectsProgressPercent / 100) * 20;
 
-  // Total placement readiness score is the EXACT sum of all 3 parts
-  const totalSumScore = Math.min(100, Math.max(0, Math.round(skillsContrib + milestoneContrib + projectsContrib)));
+  // Total placement readiness score: synchronized with central careerData score
+  const calculatedSum = Math.min(100, Math.max(0, Math.round(skillsContrib + milestoneContrib + projectsContrib)));
+  const targetReadinessScore = typeof score === 'number' && score > 0 ? score : calculatedSum;
 
-  // Smooth number counter animating to totalSumScore
+  // Smooth number counter animating to targetReadinessScore
   useEffect(() => {
     let start = animatedScore;
-    const end = totalSumScore;
+    const end = targetReadinessScore;
     if (start === end) return;
 
     const duration = 400;
@@ -76,7 +77,7 @@ export default function ReadinessScoreCard({
     }, stepTime);
 
     return () => clearInterval(timer);
-  }, [totalSumScore]);
+  }, [targetReadinessScore]);
 
   // Determine Tier Status
   const getTierInfo = (val) => {

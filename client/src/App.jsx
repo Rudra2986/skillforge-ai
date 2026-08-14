@@ -36,6 +36,16 @@ export default function App() {
   const [inlineSkillInput, setInlineSkillInput] = useState('');
   
   const { user, isGuest, activePersonaKey, loginAsDemo } = useAuth();
+
+  // Auto-dismiss top notification banner after 4 seconds
+  React.useEffect(() => {
+    if (scanNotification) {
+      const timer = setTimeout(() => {
+        setScanNotification(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [scanNotification]);
   const { 
     careerData, 
     hasGeneratedRoadmap, 
