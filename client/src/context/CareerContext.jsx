@@ -51,11 +51,13 @@ export function CareerProvider({ children }) {
 
   // Synchronous initialization from localStorage
   const [careerData, setCareerData] = useState(() => {
-    const token = localStorage.getItem('token');
     const savedUserCareer = localStorage.getItem('skillforge_user_career_data');
-    if (token && savedUserCareer) {
+    if (savedUserCareer) {
       try {
-        return JSON.parse(savedUserCareer);
+        const parsed = JSON.parse(savedUserCareer);
+        if (parsed && parsed.roadmap && parsed.roadmap.length > 0) {
+          return parsed;
+        }
       } catch (e) {}
     }
     const savedPersona = localStorage.getItem('skillforge_active_persona') || 'fullstack';
@@ -64,18 +66,17 @@ export function CareerProvider({ children }) {
 
   // Track if roadmap has been explicitly generated/unlocked in this active session
   const [hasGeneratedRoadmap, setHasGeneratedRoadmap] = useState(() => {
-    const token = localStorage.getItem('token');
     const savedUserCareer = localStorage.getItem('skillforge_user_career_data');
     const hasFlag = localStorage.getItem('skillforge_has_generated_roadmap') === 'true';
-    if (token && savedUserCareer && hasFlag) return true;
+    if (savedUserCareer || hasFlag) return true;
     return false;
   });
 
-  // Restore saved roadmap from SQLite backend if user is authenticated
+  // Restore saved roadmap from backend if user is authenticated
   useEffect(() => {
     async function loadBackendRoadmap() {
       const token = localStorage.getItem('token');
-      if (token && !isGuest) {
+      if (token) {
         try {
           const savedPackage = await progressAPI.getSavedRoadmap();
           if (savedPackage && savedPackage.roadmap && savedPackage.roadmap.length > 0) {
@@ -85,7 +86,7 @@ export function CareerProvider({ children }) {
             localStorage.setItem('skillforge_user_career_data', JSON.stringify(savedPackage));
           }
         } catch (err) {
-          // No saved roadmap in SQLite yet for this user
+          // No saved roadmap in backend yet for this user
         }
       }
     }
@@ -93,29 +94,36 @@ export function CareerProvider({ children }) {
     loadBackendRoadmap();
   }, [user?.id, isGuest]);
 
-  // Keep state synced with active persona switch (for demo mode)
+  // Keep state synced with active persona switch ONLY when explicitly chosen in guest mode
   useEffect(() => {
-    if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
+    const hasSavedUserRoadmap = localStorage.getItem('skillforge_has_generated_roadmap') === 'true';
+    const hasToken = !!localStorage.getItem('token');
+    
+    // Do NOT wipe generated roadmap if user already generated one
+    if (!hasToken && !hasSavedUserRoadmap && isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
       const data = getPersonaData(activePersonaKey);
       setCareerData(data);
       localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));
-      setHasGeneratedRoadmap(false);
     }
   }, [activePersonaKey, isGuest]);
 
-  // Persist to local storage and SQLite backend
+  // Persist to local storage and backend
   const saveCareerData = async (newData) => {
     setCareerData(newData);
+    setHasGeneratedRoadmap(true);
+    localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+    localStorage.setItem('skillforge_user_career_data', JSON.stringify(newData));
+
     const key = activePersonaKey || 'fullstack';
     localStorage.setItem(`skillforge_career_${key}`, JSON.stringify(newData));
 
     const token = localStorage.getItem('token');
-    if (token && !isGuest) {
-      localStorage.setItem('skillforge_user_career_data', JSON.stringify(newData));
-      localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+    if (token) {
       try {
         await progressAPI.saveRoadmap(newData);
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Could not sync roadmap to cloud database:", e);
+      }
     }
   };
 

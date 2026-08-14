@@ -68,7 +68,7 @@ export default function App() {
 
     // If authenticated, invoke Groq AI Skill Gap Analysis & Roadmap Generation
     const token = localStorage.getItem('token');
-    if (token && !isGuest) {
+    if (token) {
       try {
         setScanNotification('🧠 Groq AI is analyzing your skill gaps and generating your customized career roadmap...');
         const aiIntelligence = await aiAPI.analyzeGap(

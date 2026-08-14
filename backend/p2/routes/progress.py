@@ -1,7 +1,7 @@
 import json
 from datetime import datetime, timezone
-from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlmodel import Session, select
 
 from p2.database import get_db
@@ -19,22 +19,24 @@ router = APIRouter(prefix="/api/progress", tags=["Progress & Roadmap Persistence
 
 @router.post("/save-roadmap", response_model=RoadmapRecord, status_code=status.HTTP_201_CREATED)
 def save_user_career_roadmap(
-    package: FullCareerIntelligencePackage,
+    package: Dict[str, Any] = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Saves or updates the generated FullCareerIntelligencePackage into SQLite database for the user.
+    Saves or updates the generated career intelligence package into database for the user.
     """
     existing_record = db.exec(
         select(RoadmapRecord).where(RoadmapRecord.user_id == current_user.id)
     ).first()
 
-    data_json_str = package.model_dump_json()
+    target_role = package.get("target_role") or "Full-Stack Developer"
+    readiness_score = int(package.get("readiness_score", 50))
+    data_json_str = json.dumps(package)
 
     if existing_record:
-        existing_record.target_role = package.target_role or "Full-Stack Developer"
-        existing_record.readiness_score = package.readiness_score
+        existing_record.target_role = target_role
+        existing_record.readiness_score = readiness_score
         existing_record.data_json = data_json_str
         existing_record.updated_at = datetime.now(timezone.utc)
         db.add(existing_record)
@@ -44,8 +46,8 @@ def save_user_career_roadmap(
     else:
         new_record = RoadmapRecord(
             user_id=current_user.id,
-            target_role=package.target_role or "Full-Stack Developer",
-            readiness_score=package.readiness_score,
+            target_role=target_role,
+            readiness_score=readiness_score,
             data_json=data_json_str
         )
         db.add(new_record)
@@ -115,12 +117,12 @@ def update_milestone_progress(
     )
 
 
-@router.get("/me", response_model=FullCareerIntelligencePackage)
+@router.get("/me")
 def get_user_saved_career_package(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Fetches active user's saved roadmap intelligence package from SQLite."""
+    """Fetches active user's saved roadmap intelligence package from database."""
     roadmap_record = db.exec(
         select(RoadmapRecord).where(RoadmapRecord.user_id == current_user.id)
     ).first()
@@ -131,5 +133,11 @@ def get_user_saved_career_package(
             detail="No saved roadmap found for current user."
         )
 
-    data = json.loads(roadmap_record.data_json)
-    return FullCareerIntelligencePackage.model_validate(data)
+    try:
+        return json.loads(roadmap_record.data_json)
+    except Exception:
+        return {
+            "target_role": roadmap_record.target_role,
+            "readiness_score": roadmap_record.readiness_score,
+            "roadmap": []
+        }
