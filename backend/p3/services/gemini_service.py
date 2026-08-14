@@ -189,12 +189,20 @@ against the target role and return ONLY a valid JSON object with exactly this st
   ]
 }}
 
-Rules:
-- roadmap must have exactly 3 milestones covering the {timeline_weeks} week timeline
-- skills_missing must have 3-5 items prioritized by importance to the target role
-- recommended_projects must have exactly 2 items
-- mock_interview_questions must have exactly 3 items
-- readiness_score must reflect actual skill gaps honestly
+Rules & Strict Requirements:
+1. Target Role Relevancy:
+   - All generated gaps, milestones, and projects MUST be 100% relevant to the target role: "{target_role}".
+   - For Full-Stack / AI Engineer: Focus strictly on full-stack architecture, API design, scalable databases, state management, caching, vector search (RAG/LangChain/pgvector), and cloud deployment. Do NOT suggest generic off-topic courses like basic Computer Vision unless specifically asked.
+   - For Data Science / ML: Focus strictly on advanced ML modeling, PySpark, MLOps, Airflow pipelines, and production inference.
+2. Accurate Gap Detection:
+   - Cross-reference the student's "Current Skills" and "Tools & Platforms".
+   - CRITICAL: Do NOT list any skill in "skills_missing" that the student ALREADY possesses.
+   - "skills_missing" must contain 3-5 specific, modern, industry-standard competencies that are genuinely absent from the student's resume and necessary to be hired as a {target_role} (e.g. "Redis & In-Memory Caching", "LangChain & Vector Embeddings", "Kubernetes Orchestration", "Next.js & SSR", "GraphQL API Design", "AWS Cloud Architecture").
+3. Roadmap & Projects:
+   - "roadmap" must have exactly 3 milestones covering the {timeline_weeks}-week timeline, designed to close the identified "skills_missing".
+   - "recommended_projects" must have exactly 2 realistic, production-grade projects that demonstrate mastery of the missing competencies for {target_role}.
+   - "mock_interview_questions" must have exactly 3 technical interview questions tailored to {target_role}.
+4. "readiness_score" must reflect the ratio of current role-relevant skills to total role benchmark requirements (0-100).
 
 Student Profile:
 {profile_summary}
@@ -236,6 +244,19 @@ Student Profile:
         for i, q in enumerate(data.get("mock_interview_questions", []))
     ]
 
+    current_skills_lower = {s.lower().strip() for s in (profile.current_skills or []) + (profile.tools_and_platforms or [])}
+
+    cleaned_skills_missing = []
+    for s in data.get("skills_missing", []):
+        skill_name = s.get("skill", "").strip()
+        if skill_name and skill_name.lower() not in current_skills_lower:
+            cleaned_skills_missing.append(
+                SkillItem(
+                    skill=skill_name,
+                    proficiency_or_importance=s.get("proficiency_or_importance", "High Priority"),
+                )
+            )
+
     return FullCareerIntelligencePackage(
         readiness_score=int(data.get("readiness_score", 50)),
         summary_assessment=data.get("summary_assessment", ""),
@@ -247,13 +268,7 @@ Student Profile:
             )
             for s in data.get("skills_present", [])
         ],
-        skills_missing=[
-            SkillItem(
-                skill=s.get("skill", ""),
-                proficiency_or_importance=s.get("proficiency_or_importance", ""),
-            )
-            for s in data.get("skills_missing", [])
-        ],
+        skills_missing=cleaned_skills_missing,
         roadmap=roadmap,
         recommended_projects=projects,
         mock_interview_questions=questions,

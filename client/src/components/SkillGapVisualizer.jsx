@@ -59,12 +59,21 @@ export default function SkillGapVisualizer({
   }
 
   // Filter out duplicate gaps and any skills that the candidate has already verified
-  const missingSkills = rawList.filter(
-    (gap, index, self) =>
-      gap.name &&
-      !verifiedSkills.some(s => s.toLowerCase() === gap.name.toLowerCase()) &&
-      index === self.findIndex(t => t.name.toLowerCase() === gap.name.toLowerCase())
-  );
+  const missingSkills = rawList
+    .map(gap => {
+      // If gap mentions containerization but user already has Docker, specialize to Kubernetes
+      let cleanName = gap.name;
+      if (cleanName.toLowerCase().includes('docker') && verifiedSkills.some(s => s.toLowerCase().includes('docker'))) {
+        cleanName = 'Kubernetes Orchestration';
+      }
+      return { ...gap, name: cleanName };
+    })
+    .filter(
+      (gap, index, self) =>
+        gap.name &&
+        !verifiedSkills.some(s => s.toLowerCase().trim() === gap.name.toLowerCase().trim()) &&
+        index === self.findIndex(t => t.name.toLowerCase().trim() === gap.name.toLowerCase().trim())
+    );
 
   const totalRequired = verifiedSkills.length + missingSkills.length;
   const matchPercentage = totalRequired > 0 
