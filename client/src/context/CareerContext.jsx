@@ -149,7 +149,7 @@ export function CareerProvider({ children }) {
   // Keep state synced with active persona switch in guest demo mode
   useEffect(() => {
     if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
-      const data = getPersonaData(activePersonaKey);
+      const data = DEMO_PERSONAS[activePersonaKey];
       setCareerData(data);
       setHasGeneratedRoadmap(true);
       localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));

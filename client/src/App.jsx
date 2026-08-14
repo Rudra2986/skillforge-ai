@@ -456,18 +456,18 @@ export default function App() {
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-neutral-100">
-                  {!isGuest && user
-                    ? (hasGeneratedRoadmap && careerData?.candidate_name ? careerData.candidate_name : (user.name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student'))
-                    : (careerData?.candidate_name || (activePersonaKey === 'datascience' ? 'Priya Sharma' : 'Alex Rivera'))
+                  {isGuest
+                    ? (activePersonaKey === 'datascience' ? 'Priya Sharma' : 'Alex Morgan')
+                    : (careerData?.candidate_name || user?.name || user?.user_metadata?.full_name || 'Candidate')
                   }
                 </h1>
                 <p className="text-sm text-neutral-400">
-                  {!isGuest && user ? (
+                  {isGuest ? (
+                    `${activePersonaKey === 'datascience' ? 'B.Tech Information Technology (Demo), 2020–2024' : 'B.Tech Computer Science & Engineering (Demo), 2018–2022'} • `
+                  ) : (
                     hasGeneratedRoadmap && careerData?.education
                       ? `${careerData.education} • `
-                      : `${user.user_metadata?.target_role ? `Target: ${user.user_metadata.target_role}` : 'Target: Full-Stack AI Engineer'} • `
-                  ) : (
-                    `${careerData?.education || 'B.Tech Computer Science'} • `
+                      : `${user?.user_metadata?.target_role ? `Target: ${user.user_metadata.target_role}` : 'Target: Full-Stack AI Engineer'} • `
                   )}
                   {hasGeneratedRoadmap ? (
                     <>Targeting <span className="text-neutral-200 font-semibold">{careerData?.target_role || user?.user_metadata?.target_role}</span></>
