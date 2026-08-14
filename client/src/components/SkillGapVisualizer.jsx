@@ -22,14 +22,49 @@ export default function SkillGapVisualizer({
   const { addSkill, removeSkill, careerData } = useCareer();
   const [newSkillInput, setNewSkillInput] = useState('');
 
-  // Extract missing skills from roadmap milestones
-  const missingSkills = roadmap
-    .filter(m => m.skill && !verifiedSkills.some(s => s.toLowerCase() === m.skill.toLowerCase()))
-    .map(m => ({
-      name: m.skill,
-      priority: m.category?.toLowerCase().includes('foundation') ? 'High' : 'Medium',
-      hours: m.estimated_hours || 10
-    }));
+  // Extract missing skills comprehensively from AI intelligence package & roadmap
+  const rawMissingItems = [
+    ...(careerData?.skills_missing || []),
+    ...(careerData?.missing_skills || [])
+  ];
+
+  let rawList = [];
+
+  if (rawMissingItems.length > 0) {
+    rawList = rawMissingItems.map((item, idx) => {
+      if (typeof item === 'string') {
+        return {
+          name: item,
+          priority: idx === 0 ? 'High' : 'Medium',
+          hours: 12 + (idx * 4)
+        };
+      }
+      return {
+        name: item.skill || item.name || 'Competency Gap',
+        priority: item.proficiency_or_importance || item.priority || (idx === 0 ? 'High' : 'Medium'),
+        hours: item.estimated_hours || item.hours || (10 + idx * 5)
+      };
+    });
+  } else if (roadmap && roadmap.length > 0) {
+    roadmap.forEach((m, idx) => {
+      const skillName = m.skill || (m.title ? m.title.replace(/^Phase\s*\d+\s*:\s*/i, '').trim() : null);
+      if (skillName && !verifiedSkills.some(s => s.toLowerCase() === skillName.toLowerCase())) {
+        rawList.push({
+          name: skillName,
+          priority: idx === 0 ? 'High' : 'Medium',
+          hours: 15
+        });
+      }
+    });
+  }
+
+  // Filter out duplicate gaps and any skills that the candidate has already verified
+  const missingSkills = rawList.filter(
+    (gap, index, self) =>
+      gap.name &&
+      !verifiedSkills.some(s => s.toLowerCase() === gap.name.toLowerCase()) &&
+      index === self.findIndex(t => t.name.toLowerCase() === gap.name.toLowerCase())
+  );
 
   const totalRequired = verifiedSkills.length + missingSkills.length;
   const matchPercentage = totalRequired > 0 
