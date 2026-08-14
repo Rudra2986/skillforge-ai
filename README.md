@@ -228,9 +228,14 @@ npm run dev
 
 ---
 
-## 👥 Contributors
+## 👥 Team & Contributors
 
-- **Rudra Patel** ([@Rudra2986](https://github.com/Rudra2986)) — *Project Architect & Full-Stack Engineer*
+| Member | Role | Core Contributions |
+| :--- | :--- | :--- |
+| **Rudra Patel** <br/>([@Rudra2986](https://github.com/Rudra2986)) | 👑 **Team Lead & Full-Stack Architect** (P1) | • React 18 frontend architecture & UI/UX design system.<br/>• Supabase Cloud PostgreSQL integration & multi-dialect SQLAlchemy engine.<br/>• JWT Authentication, `/admin` visual database dashboard & deployment pipelines.<br/>• Placement Readiness Index multi-factor mathematical scoring model. |
+| **Marshal Godhani** | ⚙️ **Core Backend Engineer** (P2) | • FastAPI RESTful API design & async Uvicorn server setup.<br/>• High-precision PDF resume parsing & text extraction endpoints.<br/>• SQLAlchemy ORM schema modeling, migrations, and Pydantic request validations. |
+| **Parv Patel** | 🧠 **AI Intelligence Engineer** (P3) | • Groq Cloud LLaMA 3.3 70B & Google Gemini prompt engineering.<br/>• Structured resume normalization and candidate profile extractor pipelines.<br/>• Competency Gap Analysis, adaptive roadmap synthesis & AI interview evaluator. |
+| **Deep Bhalani** | 🗺️ **Product & Roadmap Engineer** (P4) | • Interactive Roadmap Timeline component & phase check-off tracking.<br/>• AI Mock Interview Simulator hub, topic question banks & rubric grading UI.<br/>• Presentation deck, pitch materials, and product workflow design. |
 
 ---
 
