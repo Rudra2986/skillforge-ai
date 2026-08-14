@@ -609,7 +609,7 @@ export default function App() {
                         </p>
                       </div>
                       <span className="text-xs font-mono text-neutral-400">
-                        {careerData?.projects?.length || 0} / 3 Verified
+                        {careerData?.projects?.length || 0} / {careerData?.recommended_projects?.length || 2} Verified
                       </span>
                     </div>
 
@@ -679,6 +679,7 @@ export default function App() {
                   {/* Recommended Industry Certifications */}
                   <CertificationRecommendations 
                     certifications={careerData?.recommended_certifications || []} 
+                    targetRole={careerData?.target_role || "Data Scientist / ML Engineer"}
                   />
                 </div>
               </div>
