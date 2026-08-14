@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class User(SQLModel, table=True):
     __tablename__ = "user"
@@ -10,7 +12,7 @@ class User(SQLModel, table=True):
     name: str
     email: str = Field(unique=True, index=True)
     hashed_password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=utc_now)
 
     # Relationships
     resume: Optional["SavedResume"] = Relationship(back_populates="user")
@@ -24,7 +26,7 @@ class SavedResume(SQLModel, table=True):
     user_id: int = Field(foreign_key="user.id", unique=True, index=True)
     raw_text: str
     structured_json: str  # Serialized StructuredResumeProfile
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     # Relationship
     user: Optional[User] = Relationship(back_populates="resume")
@@ -38,7 +40,7 @@ class RoadmapRecord(SQLModel, table=True):
     target_role: str
     readiness_score: int
     data_json: str  # Serialized FullCareerIntelligencePackage
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=utc_now)
 
     # Relationship
     user: Optional[User] = Relationship(back_populates="roadmaps")

@@ -8,7 +8,7 @@ for d in (backend_dir, parent_dir):
         sys.path.insert(0, d)
 
 from fastapi.testclient import TestClient
-from backend.main import app
+from p2.main import app
 
 client = TestClient(app)
 

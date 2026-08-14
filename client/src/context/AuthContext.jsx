@@ -197,6 +197,8 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('skillforge_active_user');
     localStorage.removeItem('skillforge_guest_active');
     localStorage.removeItem('skillforge_active_persona');
+    localStorage.removeItem('skillforge_has_generated_roadmap');
+    localStorage.removeItem('skillforge_user_career_data');
     setUser(null);
     setIsGuest(false);
     setActivePersonaKey('fullstack');

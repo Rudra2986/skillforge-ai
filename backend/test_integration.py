@@ -64,8 +64,8 @@ res = client.post(
     "/api/resume/parse",
     files={"file": ("resume.pdf", io.BytesIO(dummy_pdf), "application/pdf")}
 )
-# Accept 200 (parsed) or 422 (pdfplumber couldn't read dummy bytes) — both mean endpoint is live
-check("POST /api/resume/parse endpoint reachable", res.status_code in (200, 422, 500),
+# Accept 200 (parsed) or 400/422 (validation error on dummy bytes) — all mean endpoint is live
+check("POST /api/resume/parse endpoint reachable", res.status_code in (200, 400, 422, 500),
       f"status={res.status_code}")
 
 

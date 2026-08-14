@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -36,7 +36,7 @@ def save_user_career_roadmap(
         existing_record.target_role = package.target_role or "Full-Stack Developer"
         existing_record.readiness_score = package.readiness_score
         existing_record.data_json = data_json_str
-        existing_record.updated_at = datetime.utcnow()
+        existing_record.updated_at = datetime.now(timezone.utc)
         db.add(existing_record)
         db.commit()
         db.refresh(existing_record)
@@ -99,7 +99,7 @@ def update_milestone_progress(
 
     roadmap_record.readiness_score = new_score
     roadmap_record.data_json = json.dumps(data_dict)
-    roadmap_record.updated_at = datetime.utcnow()
+    roadmap_record.updated_at = datetime.now(timezone.utc)
 
     db.add(roadmap_record)
     db.commit()

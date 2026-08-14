@@ -120,8 +120,8 @@ export default function AuthModal({ isOpen, onClose }) {
         className="relative w-full max-w-md bg-canvas-subtle border border-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Gradient Glow Accent */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400"></div>
+        {/* Top Glow Accent */}
+        <div className="h-1 w-full bg-accent"></div>
 
         {/* Modal Header */}
         <div className="p-6 pb-4 border-b border-border-subtle flex items-start justify-between">
@@ -160,7 +160,7 @@ export default function AuthModal({ isOpen, onClose }) {
         <div className="p-6 overflow-y-auto space-y-5">
           
           {/* Instant Guest Preview Card */}
-          <div className="p-3.5 rounded-lg bg-canvas-surface border border-accent/30 bg-gradient-to-b from-accent-subtle/30 to-transparent space-y-2.5">
+          <div className="p-3.5 rounded-lg bg-canvas-surface border border-border-subtle space-y-2.5 shadow-xs">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
                 <Zap className="w-3.5 h-3.5 text-amber-400" />

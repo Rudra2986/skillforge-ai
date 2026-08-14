@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export default function ResumeUploader({ onScanComplete }) {
-  const { user, activePersonaKey } = useAuth();
+  const { user, isGuest, activePersonaKey } = useAuth();
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -135,23 +135,15 @@ export default function ResumeUploader({ onScanComplete }) {
         // Real PDF File Upload -> POST /api/resume/parse
         try {
           const apiResponse = await resumeAPI.parsePDF(fileOrPersona);
+          if (!apiResponse || (!apiResponse.current_skills?.length && !apiResponse.projects?.length)) {
+            throw new Error('No technical skills or candidate profile found in this PDF. Please upload a valid technical resume/CV.');
+          }
           extractedData = apiResponse;
         } catch (apiErr) {
-          // Graceful fallback to deterministic extraction if backend is offline
-          const fallbackPersona = activePersonaKey && DEMO_PERSONAS[activePersonaKey] 
-            ? DEMO_PERSONAS[activePersonaKey] 
-            : DEMO_PERSONAS.fullstack;
-          const cleanName = fileOrPersona.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, ' ') || fallbackPersona.candidate_name;
-          extractedData = {
-            candidate_name: cleanName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            contact_email: fallbackPersona.contact_email || 'candidate@university.edu',
-            education: fallbackPersona.education || 'B.Tech in Computer Science & Engineering',
-            current_skills: fallbackPersona.current_skills || ['React', 'JavaScript', 'TypeScript', 'Python', 'Tailwind CSS', 'Git'],
-            tools_and_platforms: fallbackPersona.tools_and_platforms || ['VS Code', 'Postman', 'Docker', 'Vercel', 'GitHub'],
-            projects: fallbackPersona.projects,
-            certifications: ['Certified Software Associate'],
-            target_role: fallbackPersona.target_role
-          };
+          setIsScanning(false);
+          setScanProgress(0);
+          setErrorMessage(apiErr.message || 'The uploaded file could not be parsed as a resume. Please upload a valid PDF resume.');
+          return;
         }
 
         await new Promise((r) => setTimeout(r, 600));
@@ -211,9 +203,9 @@ export default function ResumeUploader({ onScanComplete }) {
           </div>
 
           <div className="flex items-center space-x-2 self-start sm:self-auto">
-            <span className="text-[11px] font-mono text-neutral-300 bg-canvas-surface border border-border px-3 py-1 rounded-md font-medium flex items-center space-x-1.5 shadow-sm">
+            <span className="hidden sm:inline-flex items-center space-x-1.5 px-2.5 py-1 rounded bg-canvas border border-border-subtle text-[11px] font-mono text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>FastAPI /api/resume/parse</span>
+              <span>AI Engine Ready</span>
             </span>
           </div>
         </div>
@@ -255,6 +247,50 @@ export default function ResumeUploader({ onScanComplete }) {
                 PDF documents up to 10MB • Multi-column layouts supported
               </p>
             </div>
+
+            {/* Quick Demo Resume Load - ONLY FOR EXPLORE DEMO ACCOUNTS & LANDING PREVIEW */}
+            {(isGuest || !user) && (
+              <div 
+                className="pt-3 border-t border-border-subtle/80 flex flex-col sm:flex-row items-center justify-center gap-2 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1">
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  <span>Sample Resume:</span>
+                </span>
+
+                {(!user || activePersonaKey === 'fullstack') && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      runScanSequence('fullstack');
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-canvas-surface hover:bg-canvas-elevated border border-accent/40 hover:border-accent text-accent-text hover:text-white text-xs font-medium interactive-transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    title="Load Alex's Full-Stack Resume"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Alex (Full-Stack).pdf</span>
+                  </button>
+                )}
+
+                {(!user || activePersonaKey === 'datascience') && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      runScanSequence('datascience');
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-canvas-surface hover:bg-canvas-elevated border border-accent/40 hover:border-accent text-accent-text hover:text-white text-xs font-medium interactive-transition flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    title="Load Priya's Data Science Resume"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Priya (Data Science).pdf</span>
+                  </button>
+                )}
+              </div>
+            )}
+
           </div>
         ) : null}
 
@@ -325,12 +361,12 @@ export default function ResumeUploader({ onScanComplete }) {
             <div className="w-full max-w-md mx-auto space-y-2">
               <div className="w-full bg-canvas rounded-full h-2.5 overflow-hidden border border-border p-0.5">
                 <div 
-                  className="bg-gradient-to-r from-accent to-violet-500 h-full rounded-full transition-all duration-300 ease-out shadow-sm"
+                  className="bg-accent h-full rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${scanProgress}%` }}
                 ></div>
               </div>
               <div className="flex items-center justify-between text-xs font-mono text-neutral-400">
-                <span>Deterministic Engine</span>
+                <span>AI Document Parsing</span>
                 <span className="font-bold text-accent-text">{scanProgress}%</span>
               </div>
             </div>
@@ -340,7 +376,7 @@ export default function ResumeUploader({ onScanComplete }) {
 
         {/* Post-Scan Extracted Summary Card */}
         {extractedSummary && !isScanning && (
-          <div className="p-6 rounded-xl bg-canvas-surface border border-emerald-500/40 bg-gradient-to-b from-emerald-500/10 to-transparent space-y-5 animate-in fade-in shadow-lg">
+          <div className="p-6 rounded-xl bg-canvas-surface border border-emerald-500/40 space-y-5 animate-in fade-in shadow-sm">
             
             {/* Header: Candidate Identification */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-subtle pb-4">

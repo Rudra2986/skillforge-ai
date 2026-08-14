@@ -4,7 +4,7 @@ import { useCareer } from '../context/CareerContext';
 import SkillForgeLogo from './SkillForgeLogo';
 import { Compass, User, LogIn, LogOut, Sparkles, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
 
-export default function Navbar({ onOpenAuthModal }) {
+export default function Navbar({ onOpenAuthModal, onSelectTab, activeTab = 'roadmap' }) {
   const { user, isGuest, activePersonaKey, loginAsDemo, logout, isBackendLive } = useAuth();
   const { careerData, hasGeneratedRoadmap } = useCareer();
 
@@ -12,39 +12,29 @@ export default function Navbar({ onOpenAuthModal }) {
     <header className="sticky top-0 z-40 w-full bg-canvas-subtle/90 backdrop-blur-md border-b border-border-subtle">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
-        {/* Left: Brand Identity & Active Goal */}
-        <div className="flex items-center space-x-4 sm:space-x-6">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
           <button
             type="button"
-            onClick={logout}
+            onClick={() => onSelectTab?.('home')}
             className="flex items-center space-x-3 text-left group hover:opacity-95 interactive-transition cursor-pointer border-0 outline-none focus:outline-none focus-visible:outline-none focus:ring-0 active:outline-none select-none bg-transparent p-0 shadow-none"
-            title="Return to Landing Page"
+            title="Go to Landing Dashboard"
           >
             <SkillForgeLogo className="w-8 h-8 group-hover:scale-105 interactive-transition" />
             <div className="flex flex-col">
               <span className="text-sm font-semibold text-neutral-100 tracking-tight flex items-center gap-1.5 group-hover:text-white">
                 SkillForge AI
-                <span className="text-[9px] font-mono font-medium px-1.5 py-0.2 rounded bg-accent/15 text-accent-text border border-accent/25">v1.0</span>
               </span>
               <span className="text-[11px] font-mono text-neutral-400 group-hover:text-neutral-300">Career &amp; Learning Navigator</span>
             </div>
           </button>
-
-          {/* Active Target Role Badge (Only shown when signed in & roadmap is generated) */}
-          {user && hasGeneratedRoadmap && careerData?.target_role && (
-            <div className="hidden lg:flex items-center space-x-2 px-2.5 py-1 rounded bg-canvas-surface border border-border text-xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span className="text-neutral-400">Target Role:</span>
-              <span className="font-medium text-neutral-200">{careerData.target_role}</span>
-            </div>
-          )}
         </div>
 
-        {/* Right: Judge Mode Switcher & User Auth State */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        {/* Right: Quick Persona Switcher & User Auth State */}
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
           
           {/* Quick Demo Switcher for Evaluation / Exploring */}
-          <div className="hidden md:flex items-center space-x-1.5 bg-canvas-surface border border-border rounded p-1 text-xs">
+          <div className="hidden xl:flex items-center space-x-1.5 bg-canvas-surface border border-border rounded p-1 text-xs">
             <span className="text-neutral-400 px-1.5 font-mono text-[10px] uppercase tracking-wider flex items-center">
               <Zap className="w-2.5 h-2.5 mr-1 text-amber-400" />
               Explore:
@@ -78,9 +68,9 @@ export default function Navbar({ onOpenAuthModal }) {
             <div className="flex items-center space-x-2 sm:space-x-2.5 pl-2 border-l border-border-subtle">
               <button
                 type="button"
-                onClick={onOpenAuthModal}
-                title="Click to view account / sign in"
-                className="flex items-center space-x-2 bg-canvas-surface hover:bg-canvas-elevated border border-border hover:border-border-strong px-2.5 py-1 rounded text-xs interactive-transition text-left"
+                onClick={() => onSelectTab?.('roadmap')}
+                title="View Career Roadmap"
+                className="flex items-center space-x-2 bg-canvas-surface hover:bg-canvas-elevated border border-border hover:border-accent/40 px-2.5 py-1 rounded text-xs interactive-transition text-left cursor-pointer"
               >
                 <div className="w-5 h-5 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center text-[10px] font-bold text-accent-text">
                   {(user.name || user.email || 'A').charAt(0).toUpperCase()}

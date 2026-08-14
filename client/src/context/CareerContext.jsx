@@ -6,25 +6,30 @@ import { progressAPI } from '../services/api';
 const CareerContext = createContext(null);
 
 export function CareerProvider({ children }) {
-  const { activePersonaKey } = useAuth();
+  const { user, isGuest, activePersonaKey } = useAuth();
 
-  // Multi-factor benchmark readiness score formula
+  // Multi-factor benchmark readiness score formula (Exact sum: 40% Skills + 40% Roadmap + 20% Projects)
   const calculateReadinessScore = (skills = [], roadmap = [], projects = []) => {
-    // Technical Skills: Up to 40% (Target: 8 skills)
+    // Technical Skills: Up to 40%
     const skillsCount = skills.length || 0;
-    const skillsScore = Math.min(40, Math.round((skillsCount / 8) * 40));
+    const missingSkillsCount = roadmap.filter(
+      m => m.skill && !skills.some(s => s.toLowerCase() === m.skill.toLowerCase())
+    ).length;
+    const targetSkillsCount = Math.max(skillsCount, skillsCount + missingSkillsCount, 1);
+    const skillsScore = Math.min(40, Math.round((skillsCount / targetSkillsCount) * 40));
 
     // Roadmap Milestone Execution: Up to 40%
     const completedCount = roadmap.filter(m => m.completed).length;
     const totalMilestones = roadmap.length || 3;
-    const milestoneScore = Math.round((completedCount / totalMilestones) * 40);
+    const milestoneScore = totalMilestones > 0 ? Math.round((completedCount / totalMilestones) * 40) : 0;
 
-    // Portfolio Proof Projects: Up to 20% (Target: 3 projects)
+    // Portfolio Proof Projects: Up to 20%
     const projectsCount = projects.length || 0;
-    const projectScore = Math.min(20, Math.round((projectsCount / 3) * 20));
+    const projectsTarget = 2;
+    const projectScore = Math.min(20, Math.round((projectsCount / projectsTarget) * 20));
 
     const total = skillsScore + milestoneScore + projectScore;
-    return Math.min(100, Math.max(50, total));
+    return Math.min(100, Math.max(0, total));
   };
 
   // Helper to get sanitized persona data
@@ -44,30 +49,74 @@ export function CareerProvider({ children }) {
     return defaultPersona;
   };
 
-  // Initialize from active demo persona
+  // Synchronous initialization from localStorage
   const [careerData, setCareerData] = useState(() => {
+    const token = localStorage.getItem('token');
+    const savedUserCareer = localStorage.getItem('skillforge_user_career_data');
+    if (token && savedUserCareer) {
+      try {
+        return JSON.parse(savedUserCareer);
+      } catch (e) {}
+    }
     const savedPersona = localStorage.getItem('skillforge_active_persona') || 'fullstack';
     return getPersonaData(savedPersona);
   });
 
-  // Track if roadmap has been explicitly generated in this active session
-  const [hasGeneratedRoadmap, setHasGeneratedRoadmap] = useState(false);
+  // Track if roadmap has been explicitly generated/unlocked in this active session
+  const [hasGeneratedRoadmap, setHasGeneratedRoadmap] = useState(() => {
+    const token = localStorage.getItem('token');
+    const savedUserCareer = localStorage.getItem('skillforge_user_career_data');
+    const hasFlag = localStorage.getItem('skillforge_has_generated_roadmap') === 'true';
+    if (token && savedUserCareer && hasFlag) return true;
+    return false;
+  });
 
-  // Keep state synced with active persona switch
+  // Restore saved roadmap from SQLite backend if user is authenticated
   useEffect(() => {
-    if (activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
+    async function loadBackendRoadmap() {
+      const token = localStorage.getItem('token');
+      if (token && !isGuest) {
+        try {
+          const savedPackage = await progressAPI.getSavedRoadmap();
+          if (savedPackage && savedPackage.roadmap && savedPackage.roadmap.length > 0) {
+            setCareerData(savedPackage);
+            setHasGeneratedRoadmap(true);
+            localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+            localStorage.setItem('skillforge_user_career_data', JSON.stringify(savedPackage));
+          }
+        } catch (err) {
+          // No saved roadmap in SQLite yet for this user
+        }
+      }
+    }
+
+    loadBackendRoadmap();
+  }, [user?.id, isGuest]);
+
+  // Keep state synced with active persona switch (for demo mode)
+  useEffect(() => {
+    if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
       const data = getPersonaData(activePersonaKey);
       setCareerData(data);
       localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));
       setHasGeneratedRoadmap(false);
     }
-  }, [activePersonaKey]);
+  }, [activePersonaKey, isGuest]);
 
-  // Persist to local storage per persona
-  const saveCareerData = (newData) => {
+  // Persist to local storage and SQLite backend
+  const saveCareerData = async (newData) => {
     setCareerData(newData);
     const key = activePersonaKey || 'fullstack';
     localStorage.setItem(`skillforge_career_${key}`, JSON.stringify(newData));
+
+    const token = localStorage.getItem('token');
+    if (token && !isGuest) {
+      localStorage.setItem('skillforge_user_career_data', JSON.stringify(newData));
+      localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+      try {
+        await progressAPI.saveRoadmap(newData);
+      } catch (e) {}
+    }
   };
 
   // Force reset a persona to fresh default demo data
@@ -108,11 +157,23 @@ export function CareerProvider({ children }) {
       roadmap: updatedRoadmap
     };
 
-    saveCareerData(updatedData);
+    setCareerData(updatedData);
+    const key = activePersonaKey || 'fullstack';
+    localStorage.setItem(`skillforge_career_${key}`, JSON.stringify(updatedData));
 
-    try {
-      await progressAPI.updateProgress(milestoneId, targetCompleted);
-    } catch (e) {}
+    const token = localStorage.getItem('token');
+    if (token && !isGuest) {
+      localStorage.setItem('skillforge_user_career_data', JSON.stringify(updatedData));
+      try {
+        const response = await progressAPI.updateMilestone(milestoneId, targetCompleted);
+        if (response && typeof response.readiness_score === 'number') {
+          setCareerData(prev => ({
+            ...prev,
+            readiness_score: response.readiness_score
+          }));
+        }
+      } catch (e) {}
+    }
   };
 
   // Add a verified technical skill inline from the dashboard
@@ -184,23 +245,26 @@ export function CareerProvider({ children }) {
 
   // Human-in-the-Loop Profile Update (Called after Step 2/3/4 verification)
   const updateVerifiedProfile = (verifiedFields) => {
-    const key = activePersonaKey || 'fullstack';
     const newSkills = verifiedFields.current_skills || careerData.current_skills || [];
+    const newRoadmap = verifiedFields.roadmap || careerData.roadmap || [];
+    const newProjects = verifiedFields.projects || careerData.projects || [];
+    
     const newScore = calculateReadinessScore(
       newSkills,
-      careerData.roadmap || [],
-      careerData.projects || []
+      newRoadmap,
+      newProjects
     );
 
     const updatedData = {
       ...careerData,
       ...verifiedFields,
-      readiness_score: newScore,
+      readiness_score: verifiedFields.readiness_score || newScore,
       summary_assessment: `Profile verified with ${newSkills.length} skills targeting ${verifiedFields.target_role || careerData.target_role}.`
     };
 
-    saveCareerData(updatedData);
     setHasGeneratedRoadmap(true);
+    localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+    saveCareerData(updatedData);
   };
 
   return (

@@ -61,38 +61,25 @@ def parse_resume_to_structured_profile(raw_text: str) -> StructuredResumeProfile
             found_skills.append(skill)
 
     if not found_skills:
-        found_skills = ["React", "JavaScript", "Python", "FastAPI", "Git"]
+        found_skills = []
 
     known_tools = ["Vite", "GitHub", "Postman", "Vercel", "Render", "VS Code", "Figma", "Jira"]
     found_tools = [tool for tool in known_tools if tool.upper() in text_upper]
-    if not found_tools:
-        found_tools = ["Vite", "GitHub", "Postman", "Vercel"]
 
-    education = "B.Tech Computer Science & Engineering (2022 - 2026)"
+    education = ""
     for line in lines:
         if any(keyword in line.upper() for keyword in ["B.TECH", "BACHELOR", "DEGREE", "UNIVERSITY", "INSTITUTE"]):
             education = line
             break
 
-    projects = [
-        ExtractedProject(
-            title="E-Commerce API Service",
-            tech_stack=["FastAPI", "SQLite", "Docker"],
-            description="Built a high-throughput RESTful order processing API with JWT authentication."
-        ),
-        ExtractedProject(
-            title="Interactive Portfolio Dashboard",
-            tech_stack=["React", "Tailwind CSS", "Vite"],
-            description="Created a modern dark-mode developer portfolio with automated GitHub analytics."
-        )
-    ]
+    projects = []
 
     return StructuredResumeProfile(
-        candidate_name=candidate_name,
-        contact_email=contact_email,
+        candidate_name=candidate_name if found_skills else "Unrecognized Document",
+        contact_email=contact_email if found_skills else None,
         education=education,
         current_skills=found_skills,
         tools_and_platforms=found_tools,
         projects=projects,
-        certifications=["AWS Certified Cloud Practitioner", "Google Data Analytics Professional Certificate"]
+        certifications=[]
     )

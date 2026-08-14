@@ -30,43 +30,88 @@ def _chat(prompt: str) -> str:
 
 def _parse_json_response(text: str) -> dict:
     text = text.strip()
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
-    return json.loads(text.strip())
+    if "```" in text:
+        parts = text.split("```")
+        for part in parts:
+            p = part.strip()
+            if p.startswith("json"):
+                p = p[4:].strip()
+            if p.startswith("{") and p.endswith("}"):
+                try:
+                    return json.loads(p)
+                except Exception:
+                    pass
+
+    first_brace = text.find("{")
+    last_brace = text.rfind("}")
+    if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+        return json.loads(text[first_brace:last_brace + 1])
+
+    return json.loads(text)
 
 
 def normalize_resume(raw_text: str) -> StructuredResumeProfile:
     prompt = f"""
-You are a resume parser. Extract structured information from the resume text below.
-Return ONLY a valid JSON object with exactly these fields:
+You are an expert AI Resume Parser and Document Classifier.
+Carefully analyze the text from the uploaded PDF document below.
+
+STRICT INSTRUCTIONS:
+1. Extract ONLY factual information that is explicitly stated in the document text.
+2. If the document is NOT a resume or CV (for example: it is a college practical list, course syllabus, assignment sheet, question bank, invoice, research paper, or general document):
+   - Set "is_valid_resume" to false.
+   - Set "candidate_name" to "Unrecognized Document".
+   - Set "current_skills" to [].
+   - Set "projects" to [].
+   - Set "education" to "".
+3. If it IS a genuine candidate resume or curriculum vitae:
+   - Set "is_valid_resume" to true.
+   - Extract candidate's real full name.
+   - Extract candidate's real contact email if present.
+   - Extract candidate's real degree, branch, university, and graduation year.
+   - Extract technical skills, programming languages, and frameworks explicitly stated.
+   - Extract listed portfolio projects with tech stacks and descriptions.
+   - Extract listed industry certifications.
+
+Return ONLY a valid JSON object with these exact keys:
 {{
+  "is_valid_resume": true or false,
   "candidate_name": "string",
   "contact_email": "string or null",
-  "education": "string (degree, institution, year)",
+  "education": "string",
   "current_skills": ["list of technical skills"],
   "tools_and_platforms": ["list of tools, IDEs, platforms"],
   "projects": [
     {{
       "title": "string",
-      "tech_stack": ["list"],
+      "tech_stack": ["list of tech used"],
       "description": "string"
     }}
   ],
   "certifications": ["list of certifications, empty if none"]
 }}
 
-Resume Text:
+Document Text:
 \"\"\"
-{raw_text}
+{raw_text[:8000]}
 \"\"\"
 """
     data = _parse_json_response(_chat(prompt))
 
+    if not data.get("is_valid_resume", True):
+        # Document is not a resume
+        return StructuredResumeProfile(
+            candidate_name=data.get("candidate_name", "Unrecognized Document"),
+            contact_email=data.get("contact_email"),
+            education="",
+            current_skills=[],
+            tools_and_platforms=[],
+            projects=[],
+            certifications=[],
+        )
+
     projects = [
         ExtractedProject(
-            title=p.get("title", "Untitled"),
+            title=p.get("title", "Untitled Project"),
             tech_stack=p.get("tech_stack", []),
             description=p.get("description", ""),
         )

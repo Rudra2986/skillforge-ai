@@ -4,37 +4,26 @@ import AuthModal from './components/AuthModal';
 import ResumeUploader from './components/ResumeUploader';
 import ProfileReviewModal from './components/ProfileReviewModal';
 import ReadinessScoreCard from './components/ReadinessScoreCard';
+import RoadmapTimeline from './components/RoadmapTimeline';
+import SkillGapVisualizer from './components/SkillGapVisualizer';
 import InterviewQuestionHub from './components/InterviewQuestionHub';
 import CertificationRecommendations from './components/CertificationRecommendations';
+import { aiAPI } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useCareer } from './context/CareerContext';
 import { 
   FileText, 
   Target, 
   Layers, 
-  TrendingUp, 
-  CheckCircle, 
-  Clock, 
-  ChevronRight, 
   Sparkles, 
   ArrowRight, 
   ShieldCheck, 
   Zap, 
-  Compass, 
   ArrowUpRight, 
-  GraduationCap, 
   Briefcase, 
-  Code2, 
   Check, 
-  Cpu, 
-  Terminal, 
-  Activity, 
-  Award, 
-  BookOpen, 
-  UploadCloud, 
   CheckCircle2,
-  Plus,
-  X
+  BrainCircuit
 } from 'lucide-react';
 
 export default function App() {
@@ -74,7 +63,37 @@ export default function App() {
   };
 
   // Called when student confirms profile in Step 4 Review Modal
-  const handleGenerateRoadmap = (verifiedProfile) => {
+  const handleGenerateRoadmap = async (verifiedProfile) => {
+    setIsReviewModalOpen(false);
+
+    // If authenticated, invoke Groq AI Skill Gap Analysis & Roadmap Generation
+    const token = localStorage.getItem('token');
+    if (token && !isGuest) {
+      try {
+        setScanNotification('🧠 Groq AI is analyzing your skill gaps and generating your customized career roadmap...');
+        const aiIntelligence = await aiAPI.analyzeGap(
+          verifiedProfile,
+          verifiedProfile.target_role || 'Full-Stack AI Engineer',
+          verifiedProfile.timeline_weeks || 12
+        );
+
+        if (aiIntelligence && aiIntelligence.roadmap) {
+          updateVerifiedProfile({
+            ...verifiedProfile,
+            ...aiIntelligence
+          });
+          setActiveDashboardTab('roadmap');
+          setScanNotification(
+            `🎉 Groq AI generated ${aiIntelligence.roadmap.length} milestones & blueprints for ${verifiedProfile.candidate_name || 'Candidate'} targeting ${verifiedProfile.target_role}!`
+          );
+          return;
+        }
+      } catch (err) {
+        console.warn("Groq AI gap analysis fallback to offline engine:", err);
+      }
+    }
+
+    // Default Sandbox / Fallback Mode
     if (!user) {
       const isDS = (verifiedProfile.candidate_name && verifiedProfile.candidate_name.toLowerCase().includes('priya')) || 
                    (verifiedProfile.target_role && verifiedProfile.target_role.toLowerCase().includes('data'));
@@ -82,7 +101,6 @@ export default function App() {
     }
     updateVerifiedProfile(verifiedProfile);
     setActiveDashboardTab('roadmap');
-    setIsReviewModalOpen(false);
     setScanNotification(
       `🎉 Career Roadmap generated for ${verifiedProfile.candidate_name || 'Candidate'}! (${verifiedProfile.current_skills?.length || 0} verified skills targeting ${verifiedProfile.target_role})`
     );
@@ -91,15 +109,22 @@ export default function App() {
   return (
     <div className="min-h-screen bg-canvas text-neutral-200 flex flex-col">
       {/* 1. Header Navigation */}
-      <Navbar onOpenAuthModal={() => setIsAuthModalOpen(true)} />
+      <Navbar 
+        onOpenAuthModal={() => setIsAuthModalOpen(true)} 
+        activeTab={activeDashboardTab}
+        onSelectTab={(tab) => {
+          setActiveDashboardTab(tab);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+      />
 
       {/* 2. Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         
         {/* ========================================================================= */}
-        {/* CASE A: USER IS SIGNED OUT -> MISSION CONTROL SPLIT HERO & SHOWCASE       */}
+        {/* CASE A: USER IS SIGNED OUT OR ON LANDING DASHBOARD VIEW ('home')          */}
         {/* ========================================================================= */}
-        {!user ? (
+        {!user || activeDashboardTab === 'home' ? (
           <div className="space-y-16 py-2 animate-in fade-in duration-300">
             
             {/* Split Hero Section */}
@@ -125,14 +150,25 @@ export default function App() {
 
                 {/* Primary Action Buttons */}
                 <div className="flex flex-wrap items-center gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="px-6 py-3 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg interactive-transition shadow-lg shadow-accent/25 flex items-center space-x-2 group"
-                  >
-                    <span>Launch Your Roadmap</span>
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 interactive-transition" />
-                  </button>
+                  {user ? (
+                    <button
+                      type="button"
+                      onClick={() => setActiveDashboardTab('roadmap')}
+                      className="px-6 py-3 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg interactive-transition shadow-lg shadow-accent/25 flex items-center space-x-2 group cursor-pointer"
+                    >
+                      <span>Go to Your Active Roadmap</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 interactive-transition" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="px-6 py-3 bg-accent hover:bg-accent-hover text-white text-sm font-semibold rounded-lg interactive-transition shadow-lg shadow-accent/25 flex items-center space-x-2 group cursor-pointer"
+                    >
+                      <span>Launch Your Roadmap</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 interactive-transition" />
+                    </button>
+                  )}
 
                   <button
                     type="button"
@@ -356,30 +392,30 @@ export default function App() {
           </div>
         ) : (
           /* ========================================================================= */
-          /* CASE B: USER IS SIGNED IN / EXPLORING -> RENDER ACTIVE DASHBOARD          */
+          /* CASE B: USER IS SIGNED IN -> ACTIVE CAREER ROADMAP & INGESTION DASHBOARD   */
           /* ========================================================================= */
-          <div className="space-y-6 animate-in fade-in duration-200">
+          <div className="space-y-8 animate-in fade-in duration-300">
             
-            {/* Scan Success Banner */}
+            {/* Top Notification Banner for Completed Operations */}
             {scanNotification && (
-              <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-800/80 flex items-center justify-between text-xs text-emerald-200 shadow-md animate-in fade-in">
-                <div className="flex items-center space-x-2.5">
+              <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-800/60 flex items-center justify-between gap-3 text-xs text-emerald-300">
+                <div className="flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span className="font-medium">{scanNotification}</span>
+                  <span>{scanNotification}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setScanNotification(null)}
-                  className="text-emerald-400 hover:text-white px-2 py-0.5 rounded text-[11px] font-semibold"
+                  className="text-emerald-400 hover:text-emerald-200 text-xs font-mono px-2 py-0.5 rounded hover:bg-emerald-900/50"
                 >
                   Dismiss
                 </button>
               </div>
             )}
 
-            {/* Top Hero Summary Bar */}
-            <section className="bg-canvas-subtle border border-border rounded-xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
-              <div className="space-y-1">
+            {/* Candidate Header Summary & Goal Benchmark */}
+            <section className="bg-canvas-subtle border border-border rounded-xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm text-left">
+              <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-xs font-mono uppercase tracking-wider text-accent-text bg-accent-subtle/50 px-2 py-0.5 rounded border border-accent/20 flex items-center">
                     {isGuest ? (
@@ -390,12 +426,12 @@ export default function App() {
                     ) : (
                       <>
                         <ShieldCheck className="w-3 h-3 mr-1 text-emerald-400" />
-                        Authenticated Student
+                        Verified Candidate
                       </>
                     )}
                   </span>
                   <span className="text-xs text-neutral-400 font-mono">
-                    {hasGeneratedRoadmap ? 'Roadmap Generated' : 'Step 1: Ingestion'}
+                    {hasGeneratedRoadmap ? 'Active Learning Path' : 'Step 1 of 2: Ingestion'}
                   </span>
                 </div>
                 <h1 className="text-xl sm:text-2xl font-bold text-neutral-100">
@@ -420,40 +456,30 @@ export default function App() {
                 </p>
               </div>
 
-              {/* Action Area: CTA Button & Premium Mini Readiness Gauge */}
-              <div className="flex items-center space-x-3 self-stretch sm:self-auto justify-between sm:justify-end">
+              {/* Header Actions & Quick Score Preview */}
+              <div className="flex flex-wrap items-center gap-3">
                 {hasGeneratedRoadmap ? (
                   <>
                     <button
                       type="button"
-                      onClick={() => setActiveDashboardTab(activeDashboardTab === 'scanner' ? 'roadmap' : 'scanner')}
-                      className={`px-4 py-2.5 rounded-lg text-xs font-semibold interactive-transition border flex items-center space-x-2 cursor-pointer ${
-                        activeDashboardTab === 'scanner'
-                          ? 'bg-accent text-white border-accent shadow-sm'
-                          : 'bg-canvas-surface hover:bg-canvas-elevated text-neutral-200 border-border hover:border-accent/40'
-                      }`}
+                      onClick={() => setActiveDashboardTab('scanner')}
+                      className="px-4 py-2 rounded-lg bg-canvas-surface hover:bg-canvas-elevated border border-border text-xs font-semibold text-neutral-200 interactive-transition flex items-center space-x-2 cursor-pointer"
                     >
                       <FileText className="w-3.5 h-3.5 text-accent-text" />
-                      <span>{activeDashboardTab === 'scanner' ? 'View Roadmap' : 'Scan New Resume'}</span>
+                      <span>Scan New Resume</span>
                     </button>
 
-                    {/* Premium Mini Readiness Gauge */}
-                    <div className="flex items-center space-x-3.5 px-3.5 py-2 rounded-xl bg-canvas-surface border border-border shadow-sm">
-                      <div className="flex flex-col text-right">
-                        <span className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-semibold flex items-center justify-end gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
-                          Readiness
-                        </span>
-                        <div className="text-lg font-bold font-mono text-neutral-100 leading-tight">
+                    <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-canvas-surface border border-border">
+                      <div className="space-y-0.5">
+                        <div className="text-[10px] font-mono text-neutral-400 uppercase">Readiness</div>
+                        <div className="text-base font-bold text-neutral-100">
                           {careerData?.readiness_score || 64}%
                         </div>
                       </div>
-
-                      {/* Mini Progress Ring with Center Icon */}
-                      <div className="relative w-9 h-9 flex items-center justify-center shrink-0">
-                        <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 36 36">
+                      <div className="relative w-8 h-8 flex items-center justify-center">
+                        <svg className="w-8 h-8 -rotate-90" viewBox="0 0 36 36">
                           <path
-                            className="text-canvas-elevated"
+                            className="text-border"
                             strokeWidth="3.2"
                             stroke="currentColor"
                             fill="none"
@@ -469,16 +495,13 @@ export default function App() {
                             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                           />
                         </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <TrendingUp className="w-3.5 h-3.5 text-accent-text" />
-                        </div>
                       </div>
                     </div>
                   </>
                 ) : (
-                  <div className="flex items-center space-x-2 px-3.5 py-2 rounded-lg bg-canvas-surface border border-border text-xs text-neutral-400 font-mono">
+                  <div className="flex items-center space-x-2 px-4 py-2 rounded-lg bg-canvas-surface border border-border text-xs text-neutral-400 font-mono">
                     <Sparkles className="w-3.5 h-3.5 text-accent-text" />
-                    <span>Awaiting Resume Ingestion</span>
+                    <span>Upload Resume to Begin</span>
                   </div>
                 )}
               </div>
@@ -486,46 +509,68 @@ export default function App() {
 
             {/* Dashboard Sub-Navigation Tabs (Only shown when roadmap is unlocked) */}
             {hasGeneratedRoadmap && (
-              <div className="flex items-center space-x-2 border-b border-border pb-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('scanner')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 ${
-                    activeDashboardTab === 'scanner'
-                      ? 'border-accent text-accent-text bg-canvas-subtle/80'
-                      : 'border-transparent text-neutral-400 hover:text-neutral-200'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Resume AI Ingestion</span>
-                </button>
-
+              <div className="flex items-center space-x-2 border-b border-border pb-1 overflow-x-auto">
                 <button
                   type="button"
                   onClick={() => setActiveDashboardTab('roadmap')}
-                  className={`px-4 py-2 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 ${
+                  className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 cursor-pointer shrink-0 ${
                     activeDashboardTab === 'roadmap'
                       ? 'border-accent text-accent-text bg-canvas-subtle/80'
                       : 'border-transparent text-neutral-400 hover:text-neutral-200'
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
-                  <span>Career Roadmap &amp; Skill Gaps</span>
+                  <span>Learning Roadmap &amp; Skill Gaps</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('projects')}
+                  className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 cursor-pointer shrink-0 ${
+                    activeDashboardTab === 'projects'
+                      ? 'border-accent text-accent-text bg-canvas-subtle/80'
+                      : 'border-transparent text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Capstone Projects &amp; Certifications</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('interview')}
+                  className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 cursor-pointer shrink-0 ${
+                    activeDashboardTab === 'interview'
+                      ? 'border-accent text-accent-text bg-canvas-subtle/80'
+                      : 'border-transparent text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <BrainCircuit className="w-3.5 h-3.5 text-accent-text" />
+                  <span>AI Mock Interview Simulator</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('scanner')}
+                  className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg interactive-transition border-b-2 flex items-center space-x-2 cursor-pointer shrink-0 ${
+                    activeDashboardTab === 'scanner'
+                      ? 'border-accent text-accent-text bg-canvas-subtle/80'
+                      : 'border-transparent text-neutral-400 hover:text-neutral-200'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Resume Ingestion</span>
                 </button>
               </div>
             )}
 
-            {/* TAB CONTENT: EITHER SCANNER (BEFORE ROADMAP OR ON SCANNER TAB) OR ROADMAP */}
+            {/* TAB CONTENT A: SCANNER / RESUME UPLOADER */}
             {!hasGeneratedRoadmap || activeDashboardTab === 'scanner' ? (
               <ResumeUploader onScanComplete={handleScanComplete} />
-            ) : (
-              /* TAB CONTENT B: TWO-COLUMN SKILL & ROADMAP GRID */
+            ) : activeDashboardTab === 'projects' ? (
+              /* TAB CONTENT C: DEDICATED CAPSTONE PROJECTS & CERTIFICATIONS PAGE */
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                {/* Left Column: Readiness Engine & Skills Delta Matrix */}
                 <div className="lg:col-span-1 space-y-6">
-                  
-                  {/* Placement Readiness Engine Card */}
                   <ReadinessScoreCard
                     score={careerData?.readiness_score || 55}
                     roadmap={careerData?.roadmap || []}
@@ -533,167 +578,11 @@ export default function App() {
                     projects={careerData?.projects || []}
                     targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
                   />
-
-                  {/* Current Verified Skills */}
-                  <div className="bg-canvas-subtle border border-border rounded-xl p-5 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-sm font-semibold text-neutral-200 flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-emerald-500" />
-                        <span>Verified Competencies</span>
-                      </h2>
-                      <span className="text-xs font-mono text-neutral-400">
-                        {careerData?.current_skills?.length || 0} / 8 Target
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {careerData?.current_skills?.map((skill, idx) => (
-                        <span
-                          key={idx}
-                          className="group inline-flex items-center space-x-1.5 px-2.5 py-1 text-xs font-medium bg-canvas-surface border border-border rounded-lg text-neutral-300 hover:border-emerald-500/50 interactive-transition"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          <span>{skill}</span>
-                          <button
-                            type="button"
-                            onClick={() => removeSkill(skill)}
-                            className="p-0.5 text-neutral-500 hover:text-rose-400 rounded-full interactive-transition"
-                            title={`Remove ${skill}`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Inline Add Skill Form */}
-                    <form onSubmit={handleInlineAddSkill} className="flex items-center space-x-2 pt-2 border-t border-border-subtle">
-                      <input
-                        type="text"
-                        value={inlineSkillInput}
-                        onChange={(e) => setInlineSkillInput(e.target.value)}
-                        placeholder="Type skill & press Enter (e.g. Docker, MLOps)..."
-                        className="flex-1 px-3 py-1.5 bg-canvas-surface border border-border focus:border-accent rounded-lg text-xs text-neutral-100 outline-none interactive-transition"
-                      />
-                      <button
-                        type="submit"
-                        className="px-3 py-1.5 bg-canvas-elevated hover:bg-canvas-surface border border-border hover:border-accent text-xs font-semibold text-neutral-200 rounded-lg interactive-transition flex items-center space-x-1"
-                      >
-                        <Plus className="w-3.5 h-3.5 text-accent-text" />
-                        <span>Add</span>
-                      </button>
-                    </form>
-                  </div>
-
-                  {/* Identified Skill Gaps (High-Signal) */}
-                  <div className="bg-canvas-subtle border border-border rounded-xl p-5 space-y-4 shadow-sm">
-                    <div className="flex items-center justify-between">
-                      <h2 className="text-sm font-semibold text-neutral-200 flex items-center space-x-2">
-                        <Target className="w-4 h-4 text-amber-500" />
-                        <span>Identified Skill Deficiencies</span>
-                      </h2>
-                      <span className="text-xs font-mono text-amber-400">Action Required</span>
-                    </div>
-                    <ul className="space-y-2">
-                      {careerData?.skills_missing?.map((item, idx) => (
-                        <li
-                          key={idx}
-                          className="flex items-center justify-between p-2.5 rounded bg-canvas-surface border border-border-subtle text-xs hover:border-border interactive-transition"
-                        >
-                          <span className="text-neutral-200 font-medium">{item.skill}</span>
-                          <span className={`font-mono text-[10px] uppercase px-1.5 py-0.5 rounded border ${
-                            item.proficiency_or_importance === 'Critical'
-                              ? 'bg-rose-950/40 text-rose-400 border-rose-800/50'
-                              : 'bg-amber-950/40 text-amber-400 border-amber-800/50'
-                          }`}>
-                            {item.proficiency_or_importance}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
                 </div>
 
-                {/* Right Column: Active Learning Phases & Milestones */}
                 <div className="lg:col-span-2 space-y-6">
-                  
-                  <div className="bg-canvas-subtle border border-border rounded-xl p-6 space-y-6 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-border-subtle pb-4">
-                      <div>
-                        <h2 className="text-base font-semibold text-neutral-100 flex items-center space-x-2">
-                          <Layers className="w-4 h-4 text-accent-text" />
-                          <span>Adaptive Learning Roadmap</span>
-                        </h2>
-                        <p className="text-xs text-neutral-400 mt-0.5">
-                          Milestones structured specifically to bridge your {careerData?.target_role} requirements.
-                        </p>
-                      </div>
-                      <span className="text-xs font-mono px-2.5 py-1 rounded bg-canvas-surface border border-border text-neutral-300">
-                        {careerData?.roadmap?.filter(m => m.completed).length || 0} / {careerData?.roadmap?.length || 0} Completed
-                      </span>
-                    </div>
-
-                    {/* Milestones List */}
-                    <div className="space-y-4">
-                      {careerData?.roadmap?.map((milestone) => (
-                        <div
-                          key={milestone.id}
-                          className={`p-4 rounded-xl border interactive-transition ${
-                            milestone.completed
-                              ? 'bg-canvas-surface/40 border-border-subtle opacity-75'
-                              : 'bg-canvas-surface border-border hover:border-border-strong shadow-xs'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-start space-x-3">
-                              <button
-                                type="button"
-                                onClick={() => toggleMilestone(milestone.id)}
-                                className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center interactive-transition ${
-                                  milestone.completed
-                                    ? 'bg-emerald-600 border-emerald-500 text-white'
-                                    : 'border-neutral-500 hover:border-neutral-300 bg-canvas'
-                                }`}
-                                title={milestone.completed ? 'Mark incomplete' : 'Mark complete'}
-                              >
-                                {milestone.completed && <CheckCircle className="w-3.5 h-3.5" />}
-                              </button>
-                              <div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs font-mono text-neutral-400">Phase {milestone.phase}</span>
-                                  <span className="text-xs text-neutral-500">•</span>
-                                  <span className="text-xs font-mono text-neutral-400 flex items-center">
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    {milestone.duration}
-                                  </span>
-                                </div>
-                                <h3 className={`text-sm font-semibold mt-1 ${
-                                  milestone.completed ? 'line-through text-neutral-400' : 'text-neutral-100'
-                                }`}>
-                                  {milestone.title}
-                                </h3>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Action Items */}
-                          <div className="mt-3 pl-8 space-y-1.5">
-                            {milestone.action_items?.map((item, i) => (
-                              <div key={i} className="text-xs text-neutral-300 flex items-center space-x-2">
-                                <span className="w-1 h-1 rounded-full bg-neutral-500 shrink-0"></span>
-                                <span>{item}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                  </div>
-
                   {/* Recommended Capstone Projects (Placement Proof) */}
-                  <div className="bg-canvas-subtle border border-border rounded-xl p-6 space-y-4 shadow-sm">
+                  <div className="bg-canvas-subtle border border-border rounded-xl p-6 space-y-4 shadow-sm text-left">
                     <div className="flex items-center justify-between border-b border-border-subtle pb-3">
                       <div>
                         <h2 className="text-sm font-semibold text-neutral-100 flex items-center space-x-2">
@@ -776,11 +665,57 @@ export default function App() {
                   <CertificationRecommendations 
                     certifications={careerData?.recommended_certifications || []} 
                   />
+                </div>
+              </div>
+            ) : activeDashboardTab === 'interview' ? (
+              /* TAB CONTENT D: DEDICATED AI MOCK INTERVIEW SIMULATOR PAGE */
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1 space-y-6">
+                  <ReadinessScoreCard
+                    score={careerData?.readiness_score || 55}
+                    roadmap={careerData?.roadmap || []}
+                    skills={careerData?.current_skills || []}
+                    projects={careerData?.projects || []}
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                  />
+                </div>
 
-                  {/* Targeted Placement Interview Prep Hub */}
+                <div className="lg:col-span-2 space-y-6">
                   <InterviewQuestionHub 
                     questions={careerData?.mock_interview_questions || []}
                     targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                  />
+                </div>
+              </div>
+            ) : (
+              /* TAB CONTENT B: TWO-COLUMN LEARNING ROADMAP & SKILL GAPS GRID */
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                {/* Left Column: Readiness Engine Card */}
+                <div className="lg:col-span-1 space-y-6">
+                  <ReadinessScoreCard
+                    score={careerData?.readiness_score || 55}
+                    roadmap={careerData?.roadmap || []}
+                    skills={careerData?.current_skills || []}
+                    projects={careerData?.projects || []}
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                  />
+                </div>
+
+                {/* Right Column: Active Learning Phases & Milestones */}
+                <div className="lg:col-span-2 space-y-6">
+                  
+                  {/* P4 Interactive Learning Roadmap Timeline */}
+                  <RoadmapTimeline 
+                    roadmap={careerData?.roadmap || []} 
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"} 
+                  />
+
+                  {/* P4 Target Benchmark & Skill Gap Visualizer */}
+                  <SkillGapVisualizer
+                    verifiedSkills={careerData?.current_skills || []}
+                    targetRole={careerData?.target_role || "Full-Stack AI Engineer"}
+                    roadmap={careerData?.roadmap || []}
                   />
 
                 </div>
