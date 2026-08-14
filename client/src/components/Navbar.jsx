@@ -41,8 +41,11 @@ export default function Navbar({ onOpenAuthModal, onSelectTab, activeTab = 'road
             </span>
             <button
               type="button"
-              onClick={() => loginAsDemo('fullstack')}
-              className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs ${
+              onClick={() => {
+                loginAsDemo('fullstack');
+                onSelectTab?.('roadmap');
+              }}
+              className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs cursor-pointer ${
                 activePersonaKey === 'fullstack' && isGuest
                   ? 'bg-accent text-white'
                   : 'text-neutral-300 hover:text-white hover:bg-canvas-elevated'
@@ -52,8 +55,11 @@ export default function Navbar({ onOpenAuthModal, onSelectTab, activeTab = 'road
             </button>
             <button
               type="button"
-              onClick={() => loginAsDemo('datascience')}
-              className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs ${
+              onClick={() => {
+                loginAsDemo('datascience');
+                onSelectTab?.('roadmap');
+              }}
+              className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs cursor-pointer ${
                 activePersonaKey === 'datascience' && isGuest
                   ? 'bg-accent text-white'
                   : 'text-neutral-300 hover:text-white hover:bg-canvas-elevated'

@@ -187,8 +187,11 @@ export default function App() {
 
                   <button
                     type="button"
-                    onClick={() => loginAsDemo(heroPersona)}
-                    className="px-5 py-3 bg-canvas-surface hover:bg-canvas-elevated border border-border hover:border-accent/40 text-neutral-200 text-sm font-medium rounded-lg interactive-transition flex items-center space-x-2"
+                    onClick={() => {
+                      loginAsDemo(heroPersona);
+                      setActiveDashboardTab('roadmap');
+                    }}
+                    className="px-5 py-3 bg-canvas-surface hover:bg-canvas-elevated border border-border hover:border-accent/40 text-neutral-200 text-sm font-medium rounded-lg interactive-transition flex items-center space-x-2 cursor-pointer"
                   >
                     <Zap className="w-4 h-4 text-amber-400" />
                     <span>Instant Live Sandbox ({heroPersona === 'fullstack' ? 'Alex' : 'Priya'})</span>
@@ -332,8 +335,11 @@ export default function App() {
                     {/* Interactive Trigger to View Full Sandbox */}
                     <button
                       type="button"
-                      onClick={() => loginAsDemo(heroPersona)}
-                      className="w-full mt-2 py-2 px-3 rounded bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent-text hover:text-white text-xs font-sans font-medium flex items-center justify-center space-x-1.5 interactive-transition"
+                      onClick={() => {
+                        loginAsDemo(heroPersona);
+                        setActiveDashboardTab('roadmap');
+                      }}
+                      className="w-full mt-2 py-2 px-3 rounded bg-accent/10 hover:bg-accent/20 border border-accent/30 text-accent-text hover:text-white text-xs font-sans font-medium flex items-center justify-center space-x-1.5 interactive-transition cursor-pointer"
                     >
                       <span>Explore {heroPersona === 'fullstack' ? 'Alex' : 'Priya'}&apos;s full roadmap</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />

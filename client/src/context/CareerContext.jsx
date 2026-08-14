@@ -146,16 +146,14 @@ export function CareerProvider({ children }) {
     }
   }, [user?.id]);
 
-  // Keep state synced with active persona switch ONLY when explicitly chosen in guest mode
+  // Keep state synced with active persona switch in guest demo mode
   useEffect(() => {
-    const hasSavedUserRoadmap = localStorage.getItem('skillforge_has_generated_roadmap') === 'true';
-    const hasToken = !!localStorage.getItem('token');
-    
-    // Do NOT wipe generated roadmap if user already generated one
-    if (!hasToken && !hasSavedUserRoadmap && isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
+    if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
       const data = getPersonaData(activePersonaKey);
       setCareerData(data);
+      setHasGeneratedRoadmap(true);
       localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));
+      localStorage.setItem('skillforge_has_generated_roadmap', 'true');
     }
   }, [activePersonaKey, isGuest]);
 
