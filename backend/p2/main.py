@@ -63,6 +63,12 @@ def root():
     }
 
 
+from sqlmodel import Session, select
+from fastapi.responses import FileResponse, JSONResponse
+from p2.database import engine, DB_PATH
+from p2.models import User, SavedResume, RoadmapRecord
+
+
 @app.get("/api/health")
 def health_check():
     return {
@@ -72,3 +78,61 @@ def health_check():
         "pdf_engine": "pdfplumber",
         "progress_engine": "active"
     }
+
+
+@app.get("/api/admin/database", tags=["Admin DB Viewer"])
+def view_live_database():
+    """Inspect all rows and summary statistics in the live cloud SQLite database."""
+    with Session(engine) as session:
+        users = session.exec(select(User)).all()
+        resumes = session.exec(select(SavedResume)).all()
+        roadmaps = session.exec(select(RoadmapRecord)).all()
+
+        return {
+            "database_file": DB_PATH,
+            "counts": {
+                "users": len(users),
+                "resumes": len(resumes),
+                "roadmaps": len(roadmaps)
+            },
+            "users": [
+                {
+                    "id": u.id,
+                    "name": u.name,
+                    "email": u.email,
+                    "created_at": u.created_at.isoformat() if u.created_at else None
+                }
+                for u in users
+            ],
+            "saved_resumes": [
+                {
+                    "id": r.id,
+                    "user_id": r.user_id,
+                    "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+                    "raw_text_preview": (r.raw_text[:120] + "...") if r.raw_text else ""
+                }
+                for r in resumes
+            ],
+            "roadmaps": [
+                {
+                    "id": rm.id,
+                    "user_id": rm.user_id,
+                    "target_role": rm.target_role,
+                    "readiness_score": rm.readiness_score,
+                    "updated_at": rm.updated_at.isoformat() if rm.updated_at else None
+                }
+                for rm in roadmaps
+            ]
+        }
+
+
+@app.get("/api/admin/download-db", tags=["Admin DB Viewer"])
+def download_live_database():
+    """Download the raw live skillforge.db file to inspect locally in SQLite Viewer or DB Browser."""
+    if os.path.exists(DB_PATH):
+        return FileResponse(
+            path=DB_PATH,
+            filename="skillforge_live.db",
+            media_type="application/octet-stream"
+        )
+    return JSONResponse(status_code=404, content={"detail": "Database file not found on server disk."})
