@@ -58,51 +58,41 @@ Engineering students face a massive **Placement Readiness Gap**:
 
 ## 🏗️ System Architecture & Data Flow
 
-```mermaid
-flowchart TD
-    subgraph Client["Frontend Client (React 18 + Vite + Tailwind)"]
-        UI[Student Dashboard & Landing Page]
-        Scanner[Resume Ingestion & Review Modal]
-        Roadmap[Adaptive Milestone Timeline]
-        ScoreCard[Placement Readiness Index]
-        InterviewHub[AI Mock Interview Simulator]
-    end
-
-    subgraph Backend["Core API Server (FastAPI + Uvicorn)"]
-        AuthRouter["/api/auth (JWT Signin & Register)"]
-        ResumeRouter["/api/resume/parse (PDF Extraction)"]
-        AIRouter["/api/ai (Groq AI / Gemini Engine)"]
-        ProgressRouter["/api/progress (Cloud DB Sync)"]
-        AdminRouter["/admin (Visual DB Explorer)"]
-    end
-
-    subgraph AI_Engine["AI Intelligence Engine"]
-        LLM["Groq LLaMA 3.3 70B / Google Gemini API"]
-        Prompt1["Resume Normalization Pipeline"]
-        Prompt2["Role Gap & Roadmap Generator"]
-        Prompt3["Interview Evaluator & Rubric Grader"]
-    end
-
-    subgraph Database["Persistent Storage"]
-        Postgres[(Supabase Cloud PostgreSQL)]
-        LocalDB[(SQLite Fallback)]
-    end
-
-    UI -->|Upload PDF| Scanner
-    Scanner -->|Raw File| ResumeRouter
-    ResumeRouter -->|Raw Text| AIRouter
-    AIRouter --> Prompt1 --> LLM
-    LLM -->|Structured Profile| Scanner
-    Scanner -->|Target Role & Profile| AIRouter
-    AIRouter --> Prompt2 --> LLM
-    LLM -->|Career Intelligence Package| ProgressRouter
-    ProgressRouter -->|Store & Sync| Postgres
-    ProgressRouter -->|Store & Sync| LocalDB
-    Postgres -->|Load Roadmap & Scores| UI
-    InterviewHub -->|Submit Answer| AIRouter
-    AIRouter --> Prompt3 --> LLM
-    LLM -->|Scoring & Feedback| InterviewHub
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              🌐 FRONTEND CLIENT (React 18 + Vite)                     │
+│                                                                                        │
+│   [📄 Resume Ingestion]  ──>  [🔍 Human-in-the-Loop Review]  ──>  [📊 Readiness Index] │
+│                                                                        │               │
+│   [🗺️ Adaptive Roadmap]  <──  [💼 Capstone Blueprints]    <────────────┴─> [🧠 AI Hub] │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ HTTPS / REST (JSON + JWT)
+┌───────────────────────────────────────────▼────────────────────────────────────────────┐
+│                             ⚙️ CORE BACKEND API (FastAPI + Uvicorn)                     │
+│                                                                                        │
+│   • /api/resume/parse       • /api/ai/normalize-resume      • /api/ai/analyze-gap      │
+│   • /api/progress/save      • /api/ai/evaluate-answer       • /admin (Visual Explorer) │
+└───────────────────────────┬────────────────────────────────────────────┬───────────────┘
+                            │                                            │
+┌───────────────────────────▼────────────────────┐   ┌───────────────────▼───────────────┐
+│           🧠 AI INTELLIGENCE ENGINE            │   │        🗄️ PERSISTENT STORAGE      │
+│                                                │   │                                   │
+│   • Groq Cloud LLaMA 3.3 70B Versatile         │   │   • Supabase Cloud PostgreSQL     │
+│   • Structured Pydantic Verification Pipelines │   │   • SQLAlchemy Multi-Dialect ORM  │
+│   • Google Gemini 1.5 Flash Fallback           │   │   • SQLite Local Zero-Config DB   │
+└────────────────────────────────────────────────┘   └───────────────────────────────────┘
 ```
+
+### 🔄 End-to-End Pipeline
+
+| Stage | Action | Technology / Model | Output |
+| :--- | :--- | :--- | :--- |
+| **1. Parse** | Student uploads raw PDF resume | `pdfplumber` + FastAPI | Extracted raw text blocks |
+| **2. Normalize** | AI structures text into canonical profile | Groq LLaMA 3.3 70B | `StructuredResumeProfile` (JSON) |
+| **3. Review** | Student verifies skills & chooses target role | React Human-in-the-Loop Modal | Verified candidate criteria |
+| **4. Benchmark** | AI compares skills against role requirements | Groq Intelligence Pipeline | 3-Phase Roadmap + Deficiencies Matrix |
+| **5. Track & Sync**| Real-time milestone & project updates | Supabase PostgreSQL / LocalStorage | Dynamic **Placement Readiness Score** |
+| **6. Simulate** | Technical mock interview practice | AI Rubric Evaluator | Real-time score (0–100) & model answers |
 
 ---
 
