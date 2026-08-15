@@ -82,7 +82,7 @@ export default function InterviewQuestionHub({ questions = [], targetRole = "Ful
             <span>AI Mock Interview Simulator &amp; Technical Q&amp;A</span>
           </h2>
           <p className="text-xs text-neutral-400 mt-0.5">
-            Practice answering high-frequency placement questions with instant, intelligent scoring powered by Google Gemini AI.
+            Practice answering high-frequency placement questions with instant, intelligent scoring powered by Groq LLM.
           </p>
         </div>
         <span className="text-xs font-mono px-2.5 py-1 rounded bg-canvas-surface border border-border text-neutral-300 shrink-0 self-start sm:self-auto">
@@ -171,12 +171,12 @@ export default function InterviewQuestionHub({ questions = [], targetRole = "Ful
                         {isEvaluating ? (
                           <>
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>AI Evaluating...</span>
+                            <span>Groq AI Evaluating...</span>
                           </>
                         ) : (
                           <>
                             <Sparkles className="w-3.5 h-3.5" />
-                            <span>Evaluate with AI</span>
+                            <span>Evaluate with Groq AI</span>
                           </>
                         )}
                       </button>
@@ -189,7 +189,7 @@ export default function InterviewQuestionHub({ questions = [], targetRole = "Ful
                       <div className="flex items-center justify-between border-b border-border-subtle pb-2.5">
                         <div className="flex items-center space-x-2">
                           <Award className="w-4 h-4 text-emerald-400" />
-                          <span className="text-xs font-bold text-neutral-100">AI Evaluation Result</span>
+                          <span className="text-xs font-bold text-neutral-100">Groq AI Evaluation Result</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-800">
