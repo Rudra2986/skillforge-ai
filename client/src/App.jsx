@@ -93,11 +93,11 @@ export default function App() {
 
     const startTime = Date.now();
 
-    // If authenticated, invoke Groq AI Skill Gap Analysis & Roadmap Generation
+    // If authenticated, invoke AI Skill Gap Analysis & Roadmap Generation
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        setScanNotification('🧠 Groq AI is analyzing your skill gaps and generating your customized career roadmap...');
+        setScanNotification('🧠 Google Gemini AI is analyzing your skill gaps and generating your customized career roadmap...');
         const aiIntelligence = await aiAPI.analyzeGap(
           verifiedProfile,
           verifiedProfile.target_role || 'Full-Stack AI Engineer',
@@ -119,12 +119,12 @@ export default function App() {
           setActiveDashboardTab('roadmap');
           window.scrollTo({ top: 0, behavior: 'smooth' });
           setScanNotification(
-            `🎉 Groq AI generated ${aiIntelligence.roadmap.length} milestones & blueprints for ${verifiedProfile.candidate_name || 'Candidate'} targeting ${verifiedProfile.target_role}!`
+            `🎉 Google Gemini AI generated ${aiIntelligence.roadmap.length} milestones & blueprints for ${verifiedProfile.candidate_name || 'Candidate'} targeting ${verifiedProfile.target_role}!`
           );
           return;
         }
       } catch (err) {
-        console.warn("Groq AI gap analysis fallback to offline engine:", err);
+        console.warn("AI gap analysis fallback to offline engine:", err);
       }
     }
 

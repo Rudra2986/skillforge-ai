@@ -123,7 +123,7 @@ export default function RoadmapSynthesizerModal({
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-accent/20 border border-accent/40 text-xs font-mono text-accent-text">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-spin" style={{ animationDuration: '4s' }} />
-              <span className="font-semibold">Groq LLaMA 3.3 70B Engine Active</span>
+              <span className="font-semibold">Google Gemini Flash AI Engine Active</span>
             </div>
             
             <div className="text-right">

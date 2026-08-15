@@ -94,9 +94,9 @@ Engineering students and career aspirants face four critical bottlenecks during 
 ┌───────────────────────────▼────────────────────┐   ┌───────────────────▼───────────────┐
 │           🧠 AI INTELLIGENCE ENGINE            │   │        🗄️ PERSISTENT STORAGE      │
 │                                                │   │                                   │
-│   • Groq Cloud LLaMA 3.3 70B Versatile         │   │   • Supabase Cloud PostgreSQL     │
+│   • Google Gemini 1.5 Flash Multimodal Engine  │   │   • Supabase Cloud PostgreSQL     │
 │   • Structured Pydantic Verification Pipelines │   │   • SQLAlchemy Multi-Dialect ORM  │
-│   • Google Gemini 1.5 Flash Fallback           │   │   • SQLite Local Zero-Config DB   │
+│   • Sub-second Latency & Benchmark Ontologies  │   │   • SQLite Local Zero-Config DB   │
 └────────────────────────────────────────────────┘   └───────────────────────────────────┘
 ```
 
@@ -105,9 +105,9 @@ Engineering students and career aspirants face four critical bottlenecks during 
 | Step | Component | Technology | Action / Output |
 | :--- | :--- | :--- | :--- |
 | **1. Ingest** | `ResumeUploader.jsx` | `pdfplumber` + FastAPI | Upload PDF; extracts multi-column text, education, skills, projects. |
-| **2. Normalize** | AI Extraction Engine | Groq LLaMA 3.3 70B | Normalizes raw text into structured canonical JSON schema. |
+| **2. Normalize** | AI Extraction Engine | Google Gemini 1.5 Flash | Normalizes raw text into structured canonical JSON schema. |
 | **3. Review** | `ProfileReviewModal.jsx` | React HITL Modal | Candidate validates extracted skills, edits tags, selects target career role. |
-| **4. Benchmark** | Competency Gap Engine | Groq / Gemini 1.5 Flash | Cross-references candidate profile against target role benchmark ontology. |
+| **4. Benchmark** | Competency Gap Engine | Google Gemini 1.5 Flash | Cross-references candidate profile against target role benchmark ontology. |
 | **5. Plan** | `RoadmapTimeline.jsx` | Dynamic JSON Engine | Generates 3-phase milestone roadmap + capstones + industry certifications. |
 | **6. Track** | `ReadinessScoreCard.jsx` | Multi-Factor Math Engine | Re-calculates 0–100% Placement Readiness score upon milestone check-offs. |
 | **7. Practice**| `InterviewQuestionHub.jsx`| AI Rubric Evaluator | Real-time voice/text interview simulation with scoring & model feedback. |
@@ -118,7 +118,7 @@ Engineering students and career aspirants face four critical bottlenecks during 
 
 ### 1. 📄 AI Resume Ingestion & Normalizer
 - **What it does**: Reads uploaded PDF resumes using layout-preserving multi-column text extraction (`pdfplumber`).
-- **Under the hood**: Raw text blocks are parsed by Groq LLaMA 3.3 70B using strict Pydantic schemas to extract candidate name, email, education, current skills, tools/platforms, and prior project metadata.
+- **Under the hood**: Raw text blocks are parsed by Google Gemini 1.5 Flash using strict Pydantic schemas to extract candidate name, email, education, current skills, tools/platforms, and prior project metadata.
 - **Why it matters**: Eliminates tedious manual profile entry while handling chaotic, non-standard student resume formats.
 
 ### 2. 🔍 Human-in-the-Loop (HITL) Verification Modal
@@ -207,9 +207,9 @@ SkillForge AI
 │   └── Hosting: Render Cloud Platform
 │
 ├── 🧠 AI & LLM PIPELINE
-│   ├── Primary Model: Groq Cloud SDK (LLaMA 3.3 70B Versatile — ultra-low latency ~500ms)
-│   ├── Fallback Model: Google Gemini 1.5 Flash API
-│   └── Validation: Pydantic v2 Strict JSON Validation
+│   ├── Primary Model: Google Gemini 1.5 Flash (Ultra-fast multimodal inference & 1M context)
+│   ├── Structured Extraction: Strict Pydantic JSON Schema Pipelines
+│   └── Prompt Engineering: Zero-Shot & Few-Shot Competency Ontologies
 │
 └── 🗄️ DATABASE & ADMIN
     ├── Production DB: Supabase Cloud PostgreSQL
@@ -248,7 +248,7 @@ SkillForge AI
 | :--- | :--- | :--- |
 | **Marshal Godhani** <br/>([@marshal0207](https://github.com/marshal0207)) | 👑 **Team Lead & Core Backend Engineer** (P2) | • FastAPI RESTful API architecture & async Uvicorn server setup.<br/>• High-precision PDF resume parsing & text extraction endpoints.<br/>• SQLAlchemy ORM schema modeling, migrations, and Pydantic request validations. |
 | **Rudra Patel** <br/>([@Rudra2986](https://github.com/Rudra2986)) | 💻 **Frontend Lead & Full-Stack Architect** (P1) | • React 18 frontend architecture & UI/UX design system.<br/>• Supabase Cloud PostgreSQL integration & multi-dialect SQLAlchemy engine.<br/>• JWT Authentication, `/admin` visual database dashboard & deployment pipelines.<br/>• Zero-downtime health monitoring (`/api/health` dual `HEAD`/`GET` keep-alive engine).<br/>• Placement Readiness Index multi-factor mathematical scoring model. |
-| **Parv Patel** <br/>([@ParvPatel236](https://github.com/ParvPatel236)) | 🧠 **AI Intelligence Engineer** (P3) | • Groq Cloud LLaMA 3.3 70B & Google Gemini prompt engineering.<br/>• Structured resume normalization and candidate profile extractor pipelines.<br/>• Competency Gap Analysis, adaptive roadmap synthesis & AI interview evaluator. |
+| **Parv Patel** <br/>([@ParvPatel236](https://github.com/ParvPatel236)) | 🧠 **AI Intelligence Engineer** (P3) | • Google Gemini 1.5 Flash prompt engineering & multimodal pipelines.<br/>• Structured resume normalization and candidate profile extractor pipelines.<br/>• Competency Gap Analysis, adaptive roadmap synthesis & AI interview evaluator. |
 | **Deep Bhalani** <br/>([@Deepbhalani1277](https://github.com/Deepbhalani1277)) | 🗺️ **Product & Roadmap Engineer** (P4) | • Interactive Roadmap Timeline component & phase check-off tracking.<br/>• AI Mock Interview Simulator hub, topic question banks & rubric grading UI.<br/>• Presentation deck, pitch materials, and product workflow design. |
 
 ---
@@ -270,7 +270,7 @@ SkillForge AI
 - **Step 7 — Admin Dashboard**: Briefly highlight `https://skillforge-ai-backend-7f8r.onrender.com/admin` to demonstrate live database entries and enterprise readiness.
 
 #### 3. Tech Highlights & Competitive Edge (2:45 - 3:30)
-- Ultra-low latency inference using Groq LLaMA 3.3 70B with Google Gemini fallback.
+- Sub-second latency inference using Google Gemini 1.5 Flash.
 - True full-stack cloud deployment (Vercel + Render + Supabase PostgreSQL).
 - Deterministic scoring mathematics that eliminate hallucinated evaluations.
 
@@ -284,8 +284,8 @@ SkillForge AI
 ### Q1: How do you prevent LLM hallucinations during resume parsing and gap analysis?
 > **Answer**: *"We employ a 3-layer guardrail system: First, we use strict **Pydantic v2 JSON Schema constraints** so the LLM cannot return freeform or unstructured text. Second, we have a **Human-in-the-Loop Review modal** where the candidate verifies and edits every extracted skill before roadmap synthesis. Third, our competency gap matrix references a validated role benchmark ontology."*
 
-### Q2: Why use Groq Cloud LLaMA 3.3 70B instead of standard OpenAI GPT-4?
-> **Answer**: *"Groq's LPU (Language Processing Unit) architecture delivers generation speeds of over 300 tokens/second, dropping response latency from 6–8 seconds down to **under 600 milliseconds**. For interactive student workflows and mock interviews, sub-second latency is essential for a seamless user experience. We also implemented Google Gemini 1.5 Flash as an automated fallback."*
+### Q2: Why use Google Gemini 1.5 Flash?
+> **Answer**: *"Google Gemini 1.5 Flash offers industry-leading token efficiency, multimodal document reasoning for complex resume formats, and sub-second generation latency. With its large context window and strong instruction following, it generates highly structured JSON schemas reliably."*
 
 ### Q3: How is the Placement Readiness Score calculated? Is it just a random AI output?
 > **Answer**: *"No, it is a deterministic mathematical model: **40% Technical Skills Alignment** (evaluating verified candidate skills against target role benchmarks), **40% Roadmap Execution** (tracking completed weekly milestone phases), and **20% Portfolio Proof** (verifying production-ready capstone architectures). When a student completes roadmap milestones, the score recalculates predictably."*

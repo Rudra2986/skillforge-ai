@@ -91,8 +91,7 @@ flowchart TB
 
     subgraph AI_CORE["🧠 AI INTELLIGENCE ENGINE"]
         direction TB
-        GroqLLM["⚡ Groq Cloud LPU Engine<br/><b>LLaMA 3.3 70B Versatile (~500ms)</b>"]:::aiStyle
-        GeminiFallback["🛡️ Google Gemini 1.5 Flash<br/><i>(Automated Fallback)</i>"]:::aiStyle
+        GeminiLLM["⚡ Google Gemini 1.5 Flash Engine<br/><b>Multimodal LLM & Benchmark Pipeline</b>"]:::aiStyle
         PydanticGuard["✅ Pydantic v2 Schema Guardrails<br/><i>(Zero-Hallucination JSON Pipelines)</i>"]:::aiStyle
     end
 
@@ -106,16 +105,15 @@ flowchart TB
     %% Flow Connections
     User -->|1. Uploads Resume PDF| UploadUI
     UploadUI -->|POST /api/resume/parse| ParserSvc
-    ParserSvc -->|Extracted Raw Text| GroqLLM
-    GroqLLM -->|Structured Profile JSON| PydanticGuard
+    ParserSvc -->|Extracted Raw Text| GeminiLLM
+    GeminiLLM -->|Structured Profile JSON| PydanticGuard
     PydanticGuard -->|Canonical Schema| HITLModal
     
     User -->|2. Verifies Skills & Chooses Role| HITLModal
     HITLModal -->|POST /api/ai/analyze-gap| APIRoutes
-    APIRoutes -->|Profile + Role Benchmark| GroqLLM
-    GroqLLM -.->|Failover| GeminiFallback
+    APIRoutes -->|Profile + Role Benchmark| GeminiLLM
     
-    GroqLLM -->|3-Phase Roadmap & Gap Matrix| APIRoutes
+    GeminiLLM -->|3-Phase Roadmap & Gap Matrix| APIRoutes
     APIRoutes -->|Career Intelligence Package| ScoreDial
     ScoreDial --> GapMatrix
     GapMatrix --> RoadmapUI
@@ -127,8 +125,8 @@ flowchart TB
     ProgressMath -->|Persist Progress| SQLAlchemy
     
     User -->|4. Submits Mock Interview Response| MockHub
-    MockHub -->|POST /api/ai/evaluate-answer| GroqLLM
-    GroqLLM -->|Score 0-100 & Model Answer Rubric| MockHub
+    MockHub -->|POST /api/ai/evaluate-answer| GeminiLLM
+    GeminiLLM -->|Score 0-100 & Model Answer Rubric| MockHub
     
     SQLAlchemy --> PostgreSQL
     SQLAlchemy --> SQLiteLocal
@@ -140,9 +138,9 @@ flowchart TB
 | Stage | Action | Technology / Model | Output |
 | :--- | :--- | :--- | :--- |
 | **1. Parse** | Student uploads raw PDF resume | `pdfplumber` + FastAPI | Extracted raw text blocks |
-| **2. Normalize** | AI structures text into canonical profile | Groq LLaMA 3.3 70B | `StructuredResumeProfile` (JSON) |
+| **2. Normalize** | AI structures text into canonical profile | Google Gemini 1.5 Flash | `StructuredResumeProfile` (JSON) |
 | **3. Review** | Student verifies skills & chooses target role | React Human-in-the-Loop Modal | Verified candidate criteria |
-| **4. Benchmark** | AI compares skills against role requirements | Groq Intelligence Pipeline | 3-Phase Roadmap + Deficiencies Matrix |
+| **4. Benchmark** | AI compares skills against role requirements | Google Gemini Intelligence Pipeline | 3-Phase Roadmap + Deficiencies Matrix |
 | **5. Track & Sync**| Real-time milestone & project updates | Supabase PostgreSQL / LocalStorage | Dynamic **Placement Readiness Score** |
 | **6. Simulate** | Technical mock interview practice | AI Rubric Evaluator | Real-time score (0–100) & model answers |
 
@@ -187,7 +185,7 @@ $$\text{Readiness Score} = \text{Skills Pillar (40\%)} + \text{Roadmap Pillar (4
 - **Resume Parsing**: `pdfplumber` + `pypdf`
 - **Database ORM**: SQLAlchemy with multi-dialect support (PostgreSQL via `psycopg2-binary` & SQLite)
 - **Authentication**: Passlib (Bcrypt hashing) + PyJWT (Bearer token validation)
-- **AI Integration**: Groq Cloud SDK (`llama-3.3-70b-versatile`) + Google Gemini 1.5 Flash API fallback
+- **AI Integration**: Google Gemini 1.5 Flash API + Structured JSON Schema Pipelines
 
 ---
 
@@ -219,7 +217,6 @@ cd skillforge-ai
 Create a `.env` file in the root directory:
 ```env
 # AI Engine
-GROQ_API_KEY=your_groq_api_key_here
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # Security & Auth
@@ -286,7 +283,7 @@ npm run dev
 | :--- | :--- | :--- |
 | **Marshal Godhani** <br/>([@marshal0207](https://github.com/marshal0207)) | 👑 **Team Lead & Core Backend Engineer** (P2) | • FastAPI RESTful API architecture & async Uvicorn server setup.<br/>• High-precision PDF resume parsing & text extraction endpoints.<br/>• SQLAlchemy ORM schema modeling, migrations, and Pydantic request validations. |
 | **Rudra Patel** <br/>([@Rudra2986](https://github.com/Rudra2986)) | 💻 **Frontend Lead & Full-Stack Architect** (P1) | • React 18 frontend architecture & UI/UX design system.<br/>• Supabase Cloud PostgreSQL integration & multi-dialect SQLAlchemy engine.<br/>• JWT Authentication, `/admin` visual database dashboard & deployment pipelines.<br/>• Zero-downtime health monitoring (`/api/health` dual `HEAD`/`GET` keep-alive engine).<br/>• Placement Readiness Index multi-factor mathematical scoring model. |
-| **Parv Patel** <br/>([@ParvPatel236](https://github.com/ParvPatel236)) | 🧠 **AI Intelligence Engineer** (P3) | • Groq Cloud LLaMA 3.3 70B & Google Gemini prompt engineering.<br/>• Structured resume normalization and candidate profile extractor pipelines.<br/>• Competency Gap Analysis, adaptive roadmap synthesis & AI interview evaluator. |
+| **Parv Patel** <br/>([@ParvPatel236](https://github.com/ParvPatel236)) | 🧠 **AI Intelligence Engineer** (P3) | • Google Gemini 1.5 Flash prompt engineering & multimodal pipelines.<br/>• Structured resume normalization and candidate profile extractor pipelines.<br/>• Competency Gap Analysis, adaptive roadmap synthesis & AI interview evaluator. |
 | **Deep Bhalani** <br/>([@Deepbhalani1277](https://github.com/Deepbhalani1277)) | 🗺️ **Product & Roadmap Engineer** (P4) | • Interactive Roadmap Timeline component & phase check-off tracking.<br/>• AI Mock Interview Simulator hub, topic question banks & rubric grading UI.<br/>• Presentation deck, pitch materials, and product workflow design. |
 
 ---
