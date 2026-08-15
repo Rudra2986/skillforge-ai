@@ -43,7 +43,7 @@ export default function Navbar({ onOpenAuthModal, onSelectTab, activeTab = 'road
               type="button"
               onClick={() => {
                 loginAsDemo('fullstack');
-                onSelectTab?.('roadmap');
+                onSelectTab?.('scanner');
               }}
               className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs cursor-pointer ${
                 activePersonaKey === 'fullstack' && isGuest
@@ -57,7 +57,7 @@ export default function Navbar({ onOpenAuthModal, onSelectTab, activeTab = 'road
               type="button"
               onClick={() => {
                 loginAsDemo('datascience');
-                onSelectTab?.('roadmap');
+                onSelectTab?.('scanner');
               }}
               className={`px-2.5 py-1 rounded font-medium interactive-transition text-xs cursor-pointer ${
                 activePersonaKey === 'datascience' && isGuest

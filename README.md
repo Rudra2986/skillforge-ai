@@ -58,29 +58,81 @@ Engineering students face a massive **Placement Readiness Gap**:
 
 ## 🏗️ System Architecture & Data Flow
 
-```text
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│                              🌐 FRONTEND CLIENT (React 18 + Vite)                     │
-│                                                                                        │
-│   [📄 Resume Ingestion]  ──>  [🔍 Human-in-the-Loop Review]  ──>  [📊 Readiness Index] │
-│                                                                        │               │
-│   [🗺️ Adaptive Roadmap]  <──  [💼 Capstone Blueprints]    <────────────┴─> [🧠 AI Hub] │
-└───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                            │ HTTPS / REST (JSON + JWT)
-┌───────────────────────────────────────────▼────────────────────────────────────────────┐
-│                             ⚙️ CORE BACKEND API (FastAPI + Uvicorn)                     │
-│                                                                                        │
-│   • /api/resume/parse       • /api/ai/normalize-resume      • /api/ai/analyze-gap      │
-│   • /api/progress/save      • /api/ai/evaluate-answer       • /admin (Visual Explorer) │
-└───────────────────────────┬────────────────────────────────────────────┬───────────────┘
-                            │                                            │
-┌───────────────────────────▼────────────────────┐   ┌───────────────────▼───────────────┐
-│           🧠 AI INTELLIGENCE ENGINE            │   │        🗄️ PERSISTENT STORAGE      │
-│                                                │   │                                   │
-│   • Groq Cloud LLaMA 3.3 70B Versatile         │   │   • Supabase Cloud PostgreSQL     │
-│   • Structured Pydantic Verification Pipelines │   │   • SQLAlchemy Multi-Dialect ORM  │
-│   • Google Gemini 1.5 Flash Fallback           │   │   • SQLite Local Zero-Config DB   │
-└────────────────────────────────────────────────┘   └───────────────────────────────────┘
+```mermaid
+flowchart TB
+    %% Styling Classes
+    classDef clientStyle fill:#1e293b,stroke:#38bdf8,stroke-width:2px,color:#f8fafc,rx:8px,ry:8px;
+    classDef apiStyle fill:#0f172a,stroke:#818cf8,stroke-width:2px,color:#f8fafc,rx:8px,ry:8px;
+    classDef aiStyle fill:#18181b,stroke:#ec4899,stroke-width:2px,color:#f8fafc,rx:8px,ry:8px;
+    classDef dbStyle fill:#14532d,stroke:#4ade80,stroke-width:2px,color:#f8fafc,rx:8px,ry:8px;
+    classDef userStyle fill:#312e81,stroke:#a78bfa,stroke-width:2px,color:#f8fafc,rx:8px,ry:8px;
+
+    User([👤 Candidate / Judge]):::userStyle
+
+    subgraph CLIENT["🌐 FRONTEND CLIENT — React 18 + Vite (Vercel)"]
+        direction TB
+        UploadUI["📄 Resume Ingestion & Scan Animation<br/><i>(ResumeUploader.jsx)</i>"]:::clientStyle
+        HITLModal["🔍 Human-in-the-Loop Review Modal<br/><i>(ProfileReviewModal.jsx)</i>"]:::clientStyle
+        ScoreDial["📊 Placement Readiness Score Gauge<br/><i>(ReadinessScoreCard.jsx)</i>"]:::clientStyle
+        GapMatrix["🎯 Competency Gap Matrix<br/><i>(SkillGapVisualizer.jsx)</i>"]:::clientStyle
+        RoadmapUI["🗺️ Adaptive Milestone Timeline<br/><i>(RoadmapTimeline.jsx)</i>"]:::clientStyle
+        CapstonesUI["💼 Production Capstone Blueprints<br/><i>(Architecture & GitHub Steps)</i>"]:::clientStyle
+        MockHub["🧠 AI Mock Interview Hub<br/><i>(InterviewQuestionHub.jsx)</i>"]:::clientStyle
+        AdminUI["🛠️ Dark-Mode Visual DB Explorer<br/><i>(/admin Dashboard)</i>"]:::clientStyle
+    end
+
+    subgraph API_GATEWAY["⚙️ CORE BACKEND API — FastAPI + Uvicorn (Render)"]
+        direction TB
+        ParserSvc["📑 PDF Parser Engine<br/><i>(pdfplumber + pypdf)</i>"]:::apiStyle
+        AuthSvc["🔐 Auth & Security Service<br/><i>(JWT Bearer + bcrypt)</i>"]:::apiStyle
+        ProgressMath["📐 Placement Score Recalculator<br/><i>(40% Skills + 40% Roadmap + 20% Projects)</i>"]:::apiStyle
+        APIRoutes["📡 REST API Endpoints Controller<br/><i>/api/resume, /api/ai, /api/progress, /admin</i>"]:::apiStyle
+    end
+
+    subgraph AI_CORE["🧠 AI INTELLIGENCE ENGINE"]
+        direction TB
+        GroqLLM["⚡ Groq Cloud LPU Engine<br/><b>LLaMA 3.3 70B Versatile (~500ms)</b>"]:::aiStyle
+        GeminiFallback["🛡️ Google Gemini 1.5 Flash<br/><i>(Automated Fallback)</i>"]:::aiStyle
+        PydanticGuard["✅ Pydantic v2 Schema Guardrails<br/><i>(Zero-Hallucination JSON Pipelines)</i>"]:::aiStyle
+    end
+
+    subgraph STORAGE["🗄️ PERSISTENT CLOUD & LOCAL STORAGE"]
+        direction TB
+        PostgreSQL["🐘 Supabase Cloud PostgreSQL<br/><i>(Production Cloud DB)</i>"]:::dbStyle
+        SQLiteLocal["💾 SQLite Database Engine<br/><i>(Local Dev skillforge.db)</i>"]:::dbStyle
+        SQLAlchemy["🔄 SQLAlchemy Multi-Dialect ORM<br/><i>(Tables: Users, Resumes, Roadmaps)</i>"]:::dbStyle
+    end
+
+    %% Flow Connections
+    User -->|1. Uploads Resume PDF| UploadUI
+    UploadUI -->|POST /api/resume/parse| ParserSvc
+    ParserSvc -->|Extracted Raw Text| GroqLLM
+    GroqLLM -->|Structured Profile JSON| PydanticGuard
+    PydanticGuard -->|Canonical Schema| HITLModal
+    
+    User -->|2. Verifies Skills & Chooses Role| HITLModal
+    HITLModal -->|POST /api/ai/analyze-gap| APIRoutes
+    APIRoutes -->|Profile + Role Benchmark| GroqLLM
+    GroqLLM -.->|Failover| GeminiFallback
+    
+    GroqLLM -->|3-Phase Roadmap & Gap Matrix| APIRoutes
+    APIRoutes -->|Career Intelligence Package| ScoreDial
+    ScoreDial --> GapMatrix
+    GapMatrix --> RoadmapUI
+    RoadmapUI --> CapstonesUI
+    
+    User -->|3. Toggles Milestone Check-off| RoadmapUI
+    RoadmapUI -->|POST /api/progress/update| ProgressMath
+    ProgressMath -->|Updated Readiness Index| ScoreDial
+    ProgressMath -->|Persist Progress| SQLAlchemy
+    
+    User -->|4. Submits Mock Interview Response| MockHub
+    MockHub -->|POST /api/ai/evaluate-answer| GroqLLM
+    GroqLLM -->|Score 0-100 & Model Answer Rubric| MockHub
+    
+    SQLAlchemy --> PostgreSQL
+    SQLAlchemy --> SQLiteLocal
+    AdminUI -->|GET /api/admin/database| APIRoutes
 ```
 
 ### 🔄 End-to-End Pipeline

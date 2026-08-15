@@ -19,7 +19,7 @@ import {
   ListFilter
 } from 'lucide-react';
 
-export default function AuthModal({ isOpen, onClose }) {
+export default function AuthModal({ isOpen, onClose, onSelectTab }) {
   const { 
     loginUser, 
     registerUser, 
@@ -104,6 +104,7 @@ export default function AuthModal({ isOpen, onClose }) {
   const handleDemoClick = (personaKey) => {
     loginAsDemo(personaKey);
     setSuccessMessage(`Logged in as ${personaKey === 'fullstack' ? 'Alex (Full-Stack)' : 'Priya (Data Science)'}!`);
+    if (onSelectTab) onSelectTab('scanner');
     setTimeout(() => {
       handleClose();
     }, 400);

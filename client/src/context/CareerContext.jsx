@@ -25,9 +25,10 @@ export function CareerProvider({ children }) {
   };
 
   // Multi-factor benchmark readiness score formula (Exact sum: 40% Skills + 40% Roadmap + 20% Projects)
-  const calculateReadinessScore = (skills = [], roadmap = [], projects = [], targetRole = "Full-Stack AI Engineer") => {
+  const calculateReadinessScore = (skills = [], roadmap = [], projects = [], targetRole = null) => {
+    const effectiveRole = targetRole || careerData?.target_role || "Full-Stack AI Engineer";
     // Technical Skills: Calculate how well the verified skills align with the target job benchmark (Up to 40%)
-    const relevantKeywords = getTargetRoleKeywords(targetRole);
+    const relevantKeywords = getTargetRoleKeywords(effectiveRole);
     const matchedRoleSkills = (skills || []).filter(s => {
       const sLower = (s || '').toLowerCase();
       return relevantKeywords.some(k => sLower.includes(k) || k.includes(sLower));
@@ -151,9 +152,10 @@ export function CareerProvider({ children }) {
     if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
       const data = DEMO_PERSONAS[activePersonaKey];
       setCareerData(data);
-      setHasGeneratedRoadmap(true);
+      // Require user to click Verify & Generate so they experience the full resume extraction and AI synthesis flow
+      setHasGeneratedRoadmap(false);
       localStorage.setItem(`skillforge_career_${activePersonaKey}`, JSON.stringify(data));
-      localStorage.setItem('skillforge_has_generated_roadmap', 'true');
+      localStorage.removeItem('skillforge_has_generated_roadmap');
     }
   }, [activePersonaKey, isGuest]);
 

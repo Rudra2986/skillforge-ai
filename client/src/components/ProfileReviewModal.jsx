@@ -12,7 +12,8 @@ import {
   Clock, 
   Layers,
   Code2,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 
 const AVAILABLE_ROLES = [
@@ -29,6 +30,7 @@ export default function ProfileReviewModal({ isOpen, onClose, initialData, onGen
   const [newSkillInput, setNewSkillInput] = useState('');
   const [timelineWeeks, setTimelineWeeks] = useState(12);
   const [experienceLevel, setExperienceLevel] = useState('Entry-Level / Intern');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Populate form fields when initialData changes or modal opens
   useEffect(() => {
@@ -39,6 +41,7 @@ export default function ProfileReviewModal({ isOpen, onClose, initialData, onGen
       setSkills(Array.isArray(initialData.current_skills) ? [...initialData.current_skills] : ['React', 'Python', 'Git']);
       setTimelineWeeks(initialData.timeline_weeks || 12);
       setExperienceLevel(initialData.experience_level || 'Entry-Level / Intern');
+      setIsSubmitting(false);
     }
   }, [initialData, isOpen]);
 
@@ -59,6 +62,7 @@ export default function ProfileReviewModal({ isOpen, onClose, initialData, onGen
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     const verifiedProfile = {
       candidate_name: candidateName,
       education,
@@ -70,9 +74,6 @@ export default function ProfileReviewModal({ isOpen, onClose, initialData, onGen
 
     if (onGenerateRoadmap) {
       onGenerateRoadmap(verifiedProfile);
-    }
-    if (onClose) {
-      onClose();
     }
   };
 
@@ -282,18 +283,29 @@ export default function ProfileReviewModal({ isOpen, onClose, initialData, onGen
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-neutral-200 interactive-transition"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-xs font-semibold text-neutral-400 hover:text-neutral-200 interactive-transition disabled:opacity-50"
             >
               Cancel
             </button>
 
             <button
               type="submit"
-              className="px-6 py-3 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-xl interactive-transition shadow-lg shadow-accent/25 flex items-center space-x-2"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-accent hover:bg-accent-hover text-white text-xs font-bold rounded-xl interactive-transition shadow-lg shadow-accent/25 flex items-center space-x-2 disabled:opacity-70"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Generate My AI Career Roadmap</span>
-              <ArrowRight className="w-4 h-4" />
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Generating Roadmap...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 text-amber-300" />
+                  <span>Generate My AI Career Roadmap</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </div>
 

@@ -34,14 +34,31 @@ export default function ResumeUploader({ onScanComplete, onOpenAuthModal }) {
   
   const fileInputRef = useRef(null);
 
-  // Clear stale extraction state whenever active user/persona changes
+  // Populate extraction state whenever active user/persona changes
   useEffect(() => {
     setSelectedFile(null);
     setErrorMessage(null);
-    setExtractedSummary(null);
     setIsScanning(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
-  }, [activePersonaKey, user?.id]);
+
+    if (isGuest && activePersonaKey && DEMO_PERSONAS[activePersonaKey]) {
+      const persona = DEMO_PERSONAS[activePersonaKey];
+      setExtractedSummary({
+        candidate_name: persona.candidate_name,
+        contact_email: persona.contact_email,
+        education: persona.education,
+        current_skills: persona.current_skills,
+        tools_and_platforms: persona.tools_and_platforms,
+        projects: persona.projects,
+        certifications: ['AWS Certified Cloud Practitioner', 'Meta Front-End Associate'],
+        target_role: persona.target_role,
+        timeline_weeks: persona.timeline_weeks,
+        experience_level: persona.experience_level
+      });
+    } else {
+      setExtractedSummary(null);
+    }
+  }, [activePersonaKey, user?.id, isGuest]);
 
   // Drag-and-drop event handlers
   const handleDrag = (e) => {

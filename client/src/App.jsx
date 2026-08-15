@@ -8,6 +8,7 @@ import RoadmapTimeline from './components/RoadmapTimeline';
 import SkillGapVisualizer from './components/SkillGapVisualizer';
 import InterviewQuestionHub from './components/InterviewQuestionHub';
 import CertificationRecommendations from './components/CertificationRecommendations';
+import RoadmapSynthesizerModal from './components/RoadmapSynthesizerModal';
 import { aiAPI } from './services/api';
 import { useAuth } from './context/AuthContext';
 import { useCareer } from './context/CareerContext';
@@ -29,6 +30,8 @@ import {
 export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isSynthesizingRoadmap, setIsSynthesizingRoadmap] = useState(false);
+  const [synthesizingProfile, setSynthesizingProfile] = useState(null);
   const [pendingExtractedData, setPendingExtractedData] = useState(null);
   const [heroPersona, setHeroPersona] = useState('fullstack'); // 'fullstack' | 'datascience'
   const [activeDashboardTab, setActiveDashboardTab] = useState('roadmap'); // 'roadmap' | 'scanner'
@@ -58,7 +61,12 @@ export default function App() {
   } = useCareer();
 
   const heroReadinessScore = calculateReadinessScore
-    ? calculateReadinessScore(careerData?.current_skills || [], careerData?.roadmap || [], careerData?.projects || [])
+    ? calculateReadinessScore(
+        careerData?.current_skills || [], 
+        careerData?.roadmap || [], 
+        careerData?.projects || [],
+        careerData?.target_role
+      )
     : (careerData?.readiness_score || 40);
 
   const handleInlineAddSkill = (e) => {
@@ -80,6 +88,10 @@ export default function App() {
   // Called when student confirms profile in Step 4 Review Modal
   const handleGenerateRoadmap = async (verifiedProfile) => {
     setIsReviewModalOpen(false);
+    setSynthesizingProfile(verifiedProfile);
+    setIsSynthesizingRoadmap(true);
+
+    const startTime = Date.now();
 
     // If authenticated, invoke Groq AI Skill Gap Analysis & Roadmap Generation
     const token = localStorage.getItem('token');
@@ -92,12 +104,20 @@ export default function App() {
           verifiedProfile.timeline_weeks || 12
         );
 
+        // Ensure user sees the synthesis animation for at least 1.8s for premium experience
+        const elapsed = Date.now() - startTime;
+        if (elapsed < 1800) {
+          await new Promise(r => setTimeout(r, 1800 - elapsed));
+        }
+
         if (aiIntelligence && aiIntelligence.roadmap) {
           updateVerifiedProfile({
             ...verifiedProfile,
             ...aiIntelligence
           });
+          setIsSynthesizingRoadmap(false);
           setActiveDashboardTab('roadmap');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
           setScanNotification(
             `🎉 Groq AI generated ${aiIntelligence.roadmap.length} milestones & blueprints for ${verifiedProfile.candidate_name || 'Candidate'} targeting ${verifiedProfile.target_role}!`
           );
@@ -108,14 +128,21 @@ export default function App() {
       }
     }
 
-    // Default Sandbox / Fallback Mode
+    // Default Sandbox / Fallback Mode with graceful animation timing
+    const elapsed = Date.now() - startTime;
+    if (elapsed < 1800) {
+      await new Promise(r => setTimeout(r, 1800 - elapsed));
+    }
+
     if (!user) {
       const isDS = (verifiedProfile.candidate_name && verifiedProfile.candidate_name.toLowerCase().includes('priya')) || 
                    (verifiedProfile.target_role && verifiedProfile.target_role.toLowerCase().includes('data'));
       loginAsDemo(isDS ? 'datascience' : 'fullstack');
     }
     updateVerifiedProfile(verifiedProfile);
+    setIsSynthesizingRoadmap(false);
     setActiveDashboardTab('roadmap');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setScanNotification(
       `🎉 Career Roadmap generated for ${verifiedProfile.candidate_name || 'Candidate'}! (${verifiedProfile.current_skills?.length || 0} verified skills targeting ${verifiedProfile.target_role})`
     );
@@ -189,7 +216,7 @@ export default function App() {
                     type="button"
                     onClick={() => {
                       loginAsDemo(heroPersona);
-                      setActiveDashboardTab('roadmap');
+                      setActiveDashboardTab('scanner');
                     }}
                     className="px-5 py-3 bg-canvas-surface hover:bg-canvas-elevated border border-border hover:border-accent/40 text-neutral-200 text-sm font-medium rounded-lg interactive-transition flex items-center space-x-2 cursor-pointer"
                   >
@@ -759,7 +786,8 @@ export default function App() {
       {/* 3. Authentication & Guest Preview Modal */}
       <AuthModal 
         isOpen={isAuthModalOpen} 
-        onClose={() => setIsAuthModalOpen(false)} 
+        onClose={() => setIsAuthModalOpen(false)}
+        onSelectTab={setActiveDashboardTab}
       />
 
       {/* 4. Human-in-the-Loop Profile Review Modal (Step 4) */}
@@ -768,6 +796,15 @@ export default function App() {
         onClose={() => setIsReviewModalOpen(false)}
         initialData={pendingExtractedData}
         onGenerateRoadmap={handleGenerateRoadmap}
+      />
+
+      {/* 5. AI Roadmap Synthesis Animated Loading Screen */}
+      <RoadmapSynthesizerModal
+        isOpen={isSynthesizingRoadmap}
+        candidateName={synthesizingProfile?.candidate_name || pendingExtractedData?.candidate_name}
+        targetRole={synthesizingProfile?.target_role || pendingExtractedData?.target_role || "Full-Stack AI Engineer"}
+        timelineWeeks={synthesizingProfile?.timeline_weeks || 12}
+        skillCount={synthesizingProfile?.current_skills?.length || pendingExtractedData?.current_skills?.length || 0}
       />
 
       {/* Footer */}
